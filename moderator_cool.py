@@ -34,12 +34,9 @@ except Exception as e:
 # Prompt templates
 SYSTEM_PROMPT_READER = """Vous êtes un assistant qui peut aider avec le chat en direct TikTok.
 Vous recevrez des commentaires du chat provenant du canal en direct. Pour chaque nouvelle mise à jour du chat, vous direz les nouveaux commentaires.
-Votre réponse sera par exemple : "dawdaw a dit : 'Bonjour'" pour le message : "dawdaw.hanna":"bonjour"
-pour les messages de reponses de type "dawdaw.hana" :"@bis merci, je suis d'accord" tu dira "hana a répondu à bis : merci, je suis d'accord"
 Pour le nom d'utilisateur, assurez-vous de le dire d'une façon facile à prononcer.
 Pour les smileys ou les emojis, prononce les simplement. un seul par message, sinon, c'est trop long.
 ne dis pas plusieurs emojis par messages. c'est trop long.
-tu lis les messages addressés à @SamLePirate, tu ne réponds pas à d'autres messages.
 Si il y a des fautes d'orthographe ou des fautes des frappes dans le message, corrige les dans ta réponse.
 """
 
@@ -144,7 +141,7 @@ class TikTokModerator:
         
         # Uncomment to enable auto-responses to all comments
         else:
-            if comment_data["message"].startswith("@GentilRobot") or comment_data["message"].endswith("@GentilRobot") or comment_data["message"].startswith("Gentil Robot") or comment_data["message"].endswith("Gentil Robot") :
+            if comment_data["message"].startswith("@SamLePirate") or comment_data["message"].endswith("@SamLePirate") or comment_data["message"].startswith("Gentil Robot") or comment_data["message"].endswith("Gentil Robot") :
                 await self._generate_response([comment_data])
     
     def _check_comment_moderation(self, username: str, comment_text: str):
@@ -250,7 +247,7 @@ class TikTokModerator:
                 timestamp = self._get_timestamp()
                 print(f"[{timestamp}] Suggested response: {response}")
                 print(comment['username'])
-                if comment['username'] != "GentilRobot":
+                if comment['username'] != "SamLePirate":
                     #split the response by chunk of 109 characters
                     MAX_CHARS = 100
                     responses = []
