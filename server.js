@@ -8,6 +8,7 @@ const { clientBlocked } = require('./limiter');
 const { OpenAI } = require('openai');
 const axios = require('axios');
 const db = require('./db'); // Import our database module
+const path = require('path'); // Add path module
 
 const app = express();
 const httpServer = createServer(app);
@@ -437,8 +438,10 @@ setInterval(() => {
     io.emit('statistic', { globalConnectionCount: getGlobalConnectionCount() });
 }, 2000)
 
-// Serve frontend files
-app.use(express.static('public'));
+// Serve frontend files - Use absolute path that works in both development and production
+const publicPath = path.join(process.resourcesPath || __dirname, 'public');
+app.use(express.static(publicPath));
+console.log('Serving static files from:', publicPath);
 
 // Add middleware to parse JSON
 app.use(express.json());
@@ -531,4 +534,5 @@ app.delete('/api/users/undesirables/:tiktokId', async (req, res) => {
 // Start http listener
 const port = 8081;
 httpServer.listen(port);
+console.log(process.resourcesPath || __dirname);
 console.info(`Server running! Please visit http://localhost:${port}`);

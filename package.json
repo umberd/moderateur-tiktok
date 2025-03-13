@@ -15,11 +15,15 @@
         "filter": ["tiktok_chat.db"]
       },
       {
+        "from": "public/",
+        "to": "public/"
+      },
+      {
         "from": ".env",
         "to": ".env"
       }
     ],
-    "appId": "com.monapp.electron",
+    "appId": "com.samlepirate.tiktok-moderator",
     "mac": {
       "category": "public.app-category.productivity"
     },
