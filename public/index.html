@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecteur de Chat TikTok LIVE (Démo)</title>
+
+    <meta name="description" content="Un lecteur de chat pour TikTok LIVE utilisant TikTok-Live-Connector et Socket.IO pour transmettre les données au client. Ce projet de démonstration utilise l'API non officielle de TikTok pour récupérer les commentaires du chat, les cadeaux et d'autres événements de TikTok LIVE.">
+    <meta name="keywords" content="TikTok,Live,Livestream,Chat,Reader,Scraper,Tracker,tiktok.com,broadcast,api,library,node,node.js,javascript">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flv.js@latest"></script>
+
+    <script src="connection.js"></script>
+    <script src="app.js"></script>
+
+    <!-- Audio element for notification sounds -->
+    <audio id="flaggedCommentSound" preload="auto" autoplay="true">
+        <source src="https://www.soundjay.com/misc/small-bell-ring-01a.mp3" type="audio/mpeg">
+        <!-- Fallback sound URL if the above doesn't work -->
+    </audio>
+
+    <script>
+        function generateOverlay() {
+            let username = $('#uniqueIdInput').val();
+            let showModeration = $('#showModerationToggle').is(':checked') ? 1 : 0;
+            let showResponses = $('#showResponsesToggle').is(':checked') ? 1 : 0;
+            let enableSound = $('#enableSoundToggle').is(':checked') ? 1 : 0;
+            let enableMentionNotification = $('#enableMentionNotification').is(':checked') ? 1 : 0;
+            let enableModerationNotification = $('#enableModerationNotification').is(':checked') ? 1 : 0;
+            let yourUsername = $('#yourUsernameInput').val();
+            let aiProvider = $('input[name="aiProvider"]:checked').val();
+            let aiModel = $('#ollamaModel').val();
+            let openaiApiKey = $('#openaiApiKey').val();
+            let darkTheme = $('#darkThemeToggle').is(':checked') ? 1 : 0;
+            let enableFlvStream = $('#enableFlvStreamToggle').is(':checked') ? 1 : 0;
+            
+            let url = `/obs.html?username=${username}&showLikes=1&showChats=1&showGifts=1&showFollows=1&showJoins=1&showModeration=${showModeration}&showResponses=${showResponses}&enableSound=${enableSound}&bgColor=rgb(24,23,28)&fontColor=rgb(227,229,235)&fontSize=1.3em&aiProvider=${aiProvider}&darkTheme=${darkTheme}&enableFlvStream=${enableFlvStream}`;
+            
+            // Add model parameter if Ollama is selected
+            if (aiProvider === 'ollama' && aiModel) {
+                url += `&aiModel=${encodeURIComponent(aiModel)}`;
+            }
+            
+            // Add OpenAI API key if OpenAI is selected and key is provided
+            if (aiProvider === 'openai' && openaiApiKey) {
+                url += `&openaiApiKey=${encodeURIComponent(openaiApiKey)}`;
+            }
+            
+            // Add notifications settings
+            if (enableMentionNotification) {
+                url += `&enableMentionNotification=1`;
+            }
+            
+            if (enableModerationNotification) {
+                url += `&enableModerationNotification=1`;
+            }
+            
+            // Add the user's username for mentions if provided
+            if (yourUsername) {
+                url += `&yourUsername=${encodeURIComponent(yourUsername)}`;
+            }
+        
+            if (username) {
+                window.open(url, '_blank');
+            } else {
+                alert("Entrez un nom d'utilisateur");
+            }
+        }
+        
+        // Toggle API key field visibility based on AI provider selection
+        $(document).ready(function() {
+            // Initial setup based on default selection
+            updateApiKeyVisibility();
+            
+            // Handle changes to the AI provider radio buttons
+            $('input[name="aiProvider"]').change(function() {
+                updateApiKeyVisibility();
+            });
+            
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('darkTheme');
+            if (savedTheme === 'true') {
+                $('body').addClass('dark-theme');
+                $('#darkThemeToggle').prop('checked', true);
+                $('html').attr('data-bs-theme', 'dark');
+            } else {
+                $('html').attr('data-bs-theme', 'light');
+            }
+            
+            // Handle dark theme toggle
+            $('#darkThemeToggle').change(function() {
+                if ($(this).is(':checked')) {
+                    $('body').addClass('dark-theme');
+                    $('html').attr('data-bs-theme', 'dark');
+                    localStorage.setItem('darkTheme', 'true');
+                } else {
+                    $('body').removeClass('dark-theme');
+                    $('html').attr('data-bs-theme', 'light');
+                    localStorage.setItem('darkTheme', 'false');
+                }
+            });
+            
+            function updateApiKeyVisibility() {
+                const selectedProvider = $('input[name="aiProvider"]:checked').val();
+                
+                if (selectedProvider === 'openai') {
+                    $('#openaiSettings').show();
+                    $('#ollamaSettings').hide();
+                } else {
+                    $('#openaiSettings').hide();
+                    $('#ollamaSettings').show();
+                }
+            }
+            
+            // Tabs are now handled by Bootstrap's built-in tab functionality
+            // No need for custom tab handling code
+            
+            // User search functionality
+            $('#userSearchButton').click(function() {
+                const query = $('#userSearchInput').val().trim();
+                if (query.length === 0) return;
+                
+                // Show loading indicator
+                $('#searchResults').html('<div class="d-flex justify-content-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+                
+                fetch(`/api/users/search?query=${encodeURIComponent(query)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Erreur HTTP: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const resultsDiv = $('#searchResults');
+                        resultsDiv.empty();
+                        
+                        if (data.length === 0) {
+                            resultsDiv.append('<div class="empty-list-message">Aucun résultat trouvé</div>');
+                            return;
+                        }
+                        
+                        data.forEach(user => {
+                            const lastSeen = new Date(user.last_seen).toLocaleString();
+                            let statusText = '';
+                            
+                            if (user.is_friend) {
+                                statusText = '<span class="user-status friend badge bg-primary">Ami</span>';
+                            } else if (user.is_undesirable) {
+                                statusText = '<span class="user-status undesirable badge bg-danger">Indésirable</span>';
+                                if (user.reason) {
+                                    statusText += `<span class="undesirable-reason">Raison: ${user.reason}</span>`;
+                                }
+                            }
+                            
+                            const item = $(`
+                                <div class="user-list-item card mb-2" data-tiktok-id="${user.tiktok_id}">
+                                    <div class="card-body">
+                                        <div class="user-info">
+                                            <a href="https://www.tiktok.com/@${user.tiktok_id}" target="_blank" class="user-nickname">${user.nickname}</a>
+                                            <span class="user-id">@${user.tiktok_id}</span>
+                                            ${statusText}
+                                            <span class="user-last-seen">Dernière apparition: ${lastSeen}</span>
+                                        </div>
+                                        <div class="user-actions mt-2">
+                                            ${!user.is_friend ? `<button class="add-to-friends-search btn btn-sm btn-outline-primary" data-tiktok-id="${user.tiktok_id}" data-nickname="${user.nickname}">Ajouter aux amis</button>` : ''}
+                                            ${!user.is_undesirable ? `<button class="add-to-undesirables-search btn btn-sm btn-outline-danger ms-2" data-tiktok-id="${user.tiktok_id}" data-nickname="${user.nickname}">Ajouter aux indésirables</button>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                            
+                            resultsDiv.append(item);
+                        });
+                        
+                        // Attach event listeners for search results
+                        attachUserActionListeners();
+                    })
+                    .catch(error => {
+                        console.error('Error searching users:', error);
+                        $('#searchResults').html('<div class="alert alert-danger">Erreur de recherche: ' + error.message + '</div>');
+                    });
+            });
+            
+            // Enter key for search
+            $('#userSearchInput').keypress(function(e) {
+                if (e.which === 13) {
+                    $('#userSearchButton').click();
+                }
+            });
+        });
+    </script>
+</head>
+<body class="">
+    
+    <div id="notification-container">
+        <!-- Notifications will appear here -->
+    </div>
+
+    <!-- Toggle button for user lists -->
+    <button id="toggleUserLists" class="btn btn-primary position-fixed top-0 end-0 m-3">
+        <i class="bi bi-people-fill me-2"></i>Gérer les listes d'utilisateurs
+    </button>
+
+    <!-- User Lists Panel -->
+    <div id="user-lists-panel" class="card shadow">
+        <div class="card-header">
+            <h2 class="mb-0">Listes d'utilisateurs</h2>
+        </div>
+        
+        <div class="card-body">
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="friends-tab-btn" data-bs-toggle="tab" data-bs-target="#friends-tab" type="button" role="tab">Amis</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="undesirables-tab-btn" data-bs-toggle="tab" data-bs-target="#undesirables-tab" type="button" role="tab">Indésirables</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="search-tab-btn" data-bs-toggle="tab" data-bs-target="#search-tab" type="button" role="tab">Recherche</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="friends-tab" role="tabpanel">
+                    <h3>Liste des amis</h3>
+                    <div id="friendsList" class="user-list">
+                        <!-- Friends will be populated here -->
+                        <div class="empty-list-message">Aucun ami dans la liste</div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="undesirables-tab" role="tabpanel">
+                    <h3>Liste des indésirables</h3>
+                    <div id="undesirablesList" class="user-list">
+                        <!-- Undesirables will be populated here -->
+                        <div class="empty-list-message">Aucun utilisateur indésirable dans la liste</div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="search-tab" role="tabpanel">
+                    <h3>Rechercher des utilisateurs</h3>
+                    <div class="input-group mb-3">
+                        <input type="text" id="userSearchInput" class="form-control" placeholder="Nom d'utilisateur ou @identifiant">
+                        <button id="userSearchButton" class="btn btn-primary">
+                            <i class="bi bi-search me-1"></i>Rechercher
+                        </button>
+                    </div>
+                    <div id="searchResults" class="user-list">
+                        <!-- Search results will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-4">
+        <div class="row">
+                <div class="card shadow-sm mb-4 col-6">
+                    <div class="card-body">
+                        <h2 class="card-title">Lecteur de Chat TikTok LIVE</h2>
+                        
+                        <div class="mb-3">
+                            <label for="uniqueIdInput" class="form-label">Entrez le <b>@nom d'utilisateur</b> d'une personne actuellement en direct :</label>
+                            <div class="input-group">
+                                <span class="input-group-text">@</span>
+                                <input type="text" class="form-control" id="uniqueIdInput">
+                                <button class="btn btn-primary" id="connectButton">Connecter</button>
+                            </div>
+                            <div class="mt-2">
+                                <a href="#" class="btn btn-outline-secondary" onclick="generateOverlay()">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>Générer l'URL de superposition
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="yourUsernameInput" class="form-label">Entrez <b>votre</b> nom d'utilisateur TikTok (pour recevoir des notifications quand vous êtes mentionné) :</label>
+                            <div class="input-group">
+                                <span class="input-group-text">@</span>
+                                <input type="text" class="form-control" id="yourUsernameInput" placeholder="Votre nom d'utilisateur TikTok">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Provider Selection -->
+                <div class="card shadow-sm mb-4 col-6">
+                    <div class="card-header">
+                        <h3 class="mb-0">Fournisseur de Réponses IA</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="provider-selection mb-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="aiProvider" id="aiProviderOpenai" value="openai" checked>
+                                <label class="form-check-label" for="aiProviderOpenai">OpenAI</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="aiProvider" id="aiProviderOllama" value="ollama">
+                                <label class="form-check-label" for="aiProviderOllama">Ollama</label>
+                            </div>
+                        </div>
+                        
+                        <!-- OpenAI Settings (shown by default) -->
+                        <div id="openaiSettings" class="provider-settings">
+                            <div class="mb-3">
+                                <label for="openaiApiKey" class="form-label">Votre clé API OpenAI:</label>
+                                <input type="password" class="form-control" id="openaiApiKey" placeholder="sk-...">
+                                <div class="form-text">Utilisation du modèle GPT-4o-mini d'OpenAI</div>
+                                <div class="form-text">Vous devez fournir votre propre clé API OpenAI. Vous pouvez en obtenir une sur <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a>.</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ollama Settings (hidden by default) -->
+                        <div id="ollamaSettings" class="provider-settings" style="display: none;">
+                            <div class="mb-3">
+                                <label for="ollamaModel" class="form-label">Sélectionnez un modèle Ollama :</label>
+                                <select class="form-select" id="ollamaModel">
+                                    <option value="">Chargement des modèles...</option>
+                                </select>
+                                <div class="form-text ollamaStatus">Vérification de la connexion au serveur Ollama...</div>
+                                <div class="form-text">Note : Tout contenu <code>&lt;thinking&gt;</code> du modèle sera filtré des réponses.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature Toggles -->
+                <div class="card shadow-sm mb-4 col-12">
+                    <div class="card-header">
+                        <h3 class="mb-0">Paramètres des Fonctionnalités</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Moderation Toggle -->
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="showModerationToggle">
+                                    <label class="form-check-label" for="showModerationToggle">Activer la modération de contenu</label>
+                                    <div class="form-text">Analyser les messages pour détecter le contenu inapproprié et afficher les détails de modération</div>
+                                </div>
+                                
+                                <!-- AI Responses Toggle -->
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="showResponsesToggle">
+                                    <label class="form-check-label" for="showResponsesToggle">Activer les réponses suggérées par l'IA</label>
+                                    <div class="form-text">Générer des réponses automatiques aux messages</div>
+                                </div>
+                                
+                                <!-- Username Mention Notification Toggle -->
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="enableMentionNotification" checked>
+                                    <label class="form-check-label" for="enableMentionNotification">Notifications de mention d'utilisateur</label>
+                                    <div class="form-text">Recevoir une notification lorsque votre nom d'utilisateur est mentionné</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <!-- Moderation Alert Notification Toggle -->
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="enableModerationNotification" checked>
+                                    <label class="form-check-label" for="enableModerationNotification">Alertes de modération</label>
+                                    <div class="form-text">Recevoir une notification pour les messages signalés</div>
+                                </div>
+                                
+                                <!-- Sound Notification Toggle -->
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="enableSoundToggle">
+                                    <label class="form-check-label" for="enableSoundToggle">Activer les sons de notification</label>
+                                    <div class="form-text">Jouer un son lors des notifications</div>
+                                </div>
+                                
+                                <!-- Dark Theme Toggle -->
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="darkThemeToggle">
+                                    <label class="form-check-label" for="darkThemeToggle">Mode sombre</label>
+                                    <div class="form-text">Activer l'apparence sombre de l'application</div>
+                                </div>
+                                
+                                <!-- FLV Stream Toggle -->
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="enableFlvStreamToggle" checked>
+                                    <label class="form-check-label" for="enableFlvStreamToggle">Activer le flux vidéo</label>
+                                    <div class="form-text">Activer le chargement du flux vidéo TikTok LIVE</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <pre id="stateText" class="p-3 bg-light rounded"></pre>
+                            </div>
+                            <div class="col-md-6">
+                                <div id="roomStats" class="p-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="videoContainer" class="row mt-4" style="display:none;">
+            <div class="col-6">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h3 class="mb-0 text-center">Vidéo TikTok LIVE</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="ratio ratio-16x9">
+                            <video id="flvPlayer" controls autoplay muted playsinline></video>
+                        </div>
+                        <div class="mt-2 text-muted small">
+                            <p class="mb-1">Remarque: La vidéo se lance automatiquement dès la connexion. Si elle ne démarre pas, cliquez sur le lecteur.</p>
+                            <p class="mb-0">Le son est initialement coupé pour respecter les politiques d'autoplay des navigateurs. Cliquez sur l'icône du son pour l'activer.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h3 class="mb-0 text-center">Messages</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="chatcontainer"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h3 class="mb-0 text-center">Cadeaux</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="giftcontainer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

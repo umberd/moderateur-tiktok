@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superposition OBS</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            min-width: 200px !important;
+            transition: color 0.3s, background-color 0.3s;
+        }
+
+        .usernamelink {
+            color: rgb(102, 143, 217) !important;
+        }
+
+        ::-webkit-scrollbar {
+            width: 0px;
+            height: 0px;
+        }
+
+        .eventcontainer > div {
+            margin-top: 5px;
+        }
+        
+        /* Custom moderation styles for OBS */
+        .moderation-info {
+            margin-top: 2px;
+            margin-bottom: 5px;
+        }
+        
+        .moderation-flagged {
+            background-color: rgba(255, 0, 0, 0.2);
+        }
+        
+        .moderation-safe {
+            background-color: rgba(0, 255, 0, 0.1);
+        }
+        
+        /* Custom AI response styles for OBS */
+        .response-info {
+            margin-top: 2px;
+            margin-bottom: 5px;
+            background-color: rgba(100, 100, 255, 0.15);
+        }
+        
+        /* Dark theme styles */
+        [data-bs-theme="dark"] {
+            --bs-body-bg: #212529;
+            --bs-body-color: #e9ecef;
+        }
+        
+        [data-bs-theme="dark"] .username-container,
+        [data-bs-theme="dark"] .usernamelink {
+            color: #8ab4f8 !important;
+        }
+        
+        [data-bs-theme="dark"] .moderation-flagged {
+            background-color: rgba(255, 0, 0, 0.25);
+        }
+        
+        [data-bs-theme="dark"] .moderation-safe {
+            background-color: rgba(0, 255, 0, 0.15);
+        }
+        
+        [data-bs-theme="dark"] .response-info {
+            background-color: rgba(100, 100, 255, 0.25);
+        }
+        
+        /* Transparent background for OBS */
+        body.transparent-bg {
+            background-color: transparent !important;
+        }
+        
+        /* Chat message animations */
+        .chatitem, .giftitem {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Notification close button */
+        .notification-close {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            width: 24px;
+            height: 24px;
+            border: none;
+            background-color: transparent;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-close:hover {
+            opacity: 1;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .notification-close::before,
+        .notification-close::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 2px;
+            background-color: currentColor;
+        }
+
+        .notification-close::before {
+            transform: rotate(45deg);
+        }
+
+        .notification-close::after {
+            transform: rotate(-45deg);
+        }
+
+        [data-bs-theme="dark"] .notification-close:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Clear All button for notifications */
+        .clear-notifications {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            float: right;
+            transition: background-color 0.2s;
+        }
+
+        .clear-notifications:hover {
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        [data-bs-theme="dark"] .clear-notifications {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        [data-bs-theme="dark"] .clear-notifications:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="connection.js"></script>
+    <script src="app.js"></script>
+
+    <!-- Audio element for notification sounds -->
+    <audio id="flaggedCommentSound" preload="auto">
+        <source src="https://www.soundjay.com/misc/small-bell-ring-01a.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // Get URL parameters for OBS configuration
+        window.settings = {}
+        let urlParams = new URLSearchParams(window.location.search);
+        
+        window.settings.username = urlParams.get('username')
+        window.settings.showLikes = urlParams.get('showLikes')
+        window.settings.showChats = urlParams.get('showChats')
+        window.settings.showGifts = urlParams.get('showGifts')
+        window.settings.showFollows = urlParams.get('showFollows')
+        window.settings.showJoins = urlParams.get('showJoins')
+        window.settings.showModeration = urlParams.get('showModeration')
+        window.settings.showResponses = urlParams.get('showResponses')
+        window.settings.enableSound = urlParams.get('enableSound')
+        window.settings.bgColor = urlParams.get('bgColor')
+        window.settings.fontColor = urlParams.get('fontColor')
+        window.settings.fontSize = urlParams.get('fontSize')
+        window.settings.aiProvider = urlParams.get('aiProvider')
+        window.settings.aiModel = urlParams.get('aiModel')
+        window.settings.openaiApiKey = urlParams.get('openaiApiKey')
+        window.settings.enableMentionNotification = urlParams.get('enableMentionNotification')
+        window.settings.enableModerationNotification = urlParams.get('enableModerationNotification')
+        window.settings.yourUsername = urlParams.get('yourUsername')
+        window.settings.darkTheme = urlParams.get('darkTheme')
+        
+        $(document).ready(() => {
+            // Apply theme
+            if (window.settings.darkTheme === "1") {
+                $('html').attr('data-bs-theme', 'dark');
+                $('body').addClass('dark-theme');
+            } else {
+                $('html').attr('data-bs-theme', 'light');
+            }
+            
+            // Apply custom styles if provided
+            if (window.settings.bgColor) document.body.style.backgroundColor = window.settings.bgColor;
+            if (window.settings.fontColor) document.body.style.color = window.settings.fontColor;
+            if (window.settings.fontSize) document.body.style.fontSize = window.settings.fontSize;
+            
+            // Make bg transparent if bgColor is "transparent"
+            if (window.settings.bgColor === "transparent") {
+                $('body').addClass('transparent-bg');
+            }
+            
+            // Setup notifications
+            setupNotifications();
+            
+            // Enable moderation UI if requested
+            if (window.settings.showModeration === "1") {
+                $('body').addClass('show-moderation');
+                showModerationResults = true;
+            }
+            
+            // Enable response UI if requested
+            if (window.settings.showResponses === "1") {
+                $('body').addClass('show-responses');
+                showAIResponses = true;
+            }
+            
+            // Enable sound if requested
+            if (window.settings.enableSound === "1") {
+                enableSoundNotifications = true;
+            }
+            
+            // Set username for mention notifications
+            if (window.settings.yourUsername) {
+                yourUsername = window.settings.yourUsername;
+            }
+            
+            // Configure mention notifications
+            if (window.settings.enableMentionNotification === "1") {
+                enableMentionNotifications = true;
+            } else if (window.settings.enableMentionNotification === "0") {
+                enableMentionNotifications = false;
+            }
+            
+            // Configure moderation notifications
+            if (window.settings.enableModerationNotification === "1") {
+                enableModerationNotifications = true;
+            } else if (window.settings.enableModerationNotification === "0") {
+                enableModerationNotifications = false;
+            }
+            
+            // Set AI provider
+            if (window.settings.aiProvider) {
+                aiProvider = window.settings.aiProvider;
+            }
+            
+            // Set AI model if using Ollama
+            if (window.settings.aiModel && aiProvider === 'ollama') {
+                aiModel = window.settings.aiModel;
+            }
+            
+            // Set OpenAI API key if provided
+            if (window.settings.openaiApiKey && aiProvider === 'openai') {
+                // Store the API key for use in generating responses
+                // This will be used by the server to make OpenAI API requests
+            }
+
+            if (window.settings.username) {
+                // Connect to TikTok
+                connect();
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <div id="notification-container">
+        <!-- Notifications will appear here -->
+    </div>
+    
+    <div class="container-fluid p-0">
+        <div class="eventcontainer"></div>
+    </div>
+</body>
+
+</html>

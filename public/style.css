@@ -1,0 +1,1477 @@
+body {
+    font-family:Arial, Helvetica, sans-serif;
+    min-width: 800px;
+}
+
+/* Video player styles */
+#videoContainer .card {
+    overflow: hidden;
+}
+
+#videoContainer .ratio {
+    background-color: #000;
+    border-radius: 0.25rem;
+}
+
+#flvPlayer {
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    object-fit: contain;
+}
+
+[data-bs-theme="dark"] #videoContainer .card-body {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-bs-theme="dark"] #videoContainer .text-muted {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* End of video player styles */
+
+h1 {
+    font-size: 1.8em;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+a {
+    color: #58a6ff;
+}
+
+.head {
+    margin-bottom: 15px;
+}
+
+.subTitle {
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.usernamelink {
+    color: #18508f;
+    text-decoration: none;
+}
+
+#roomUserText {
+    width: 100%;
+    text-align: right;
+}
+
+#roomStats {
+    width: 100%;
+    text-align: right;
+}
+
+#roomStats b {
+    margin-right: 20px;
+}
+
+.splitchattable, .splitstatetable {
+    width: 100%;
+}
+
+.splitstatetable td {
+    width: 50%;
+}
+
+.containerheader {
+    text-align: center;
+}
+
+.chatcontainer, .giftcontainer, .eventcontainer {
+    overflow-y: scroll;
+    height: calc(100vh - 240px);
+    word-wrap: break-word;
+    padding: 15px;
+}
+
+.eventcontainer {
+    height: calc(100vh - 90px);
+}
+
+.chatcontainer {
+    min-width: 400px;
+    max-width: calc(100vw - 430px);
+}
+
+.giftcontainer {
+    min-width: 400px;
+}
+
+.miniprofilepicture {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+}
+
+.gifticon {
+    height: 50px;
+    width: 50px;
+    margin-right: 10px;
+}
+
+/* Moderation styles */
+.moderation-info {
+    margin-top: 2px;
+    margin-left: 25px;
+    font-size: 0.8em;
+    padding: 3px 6px;
+    border-radius: 4px;
+    display: block; /* Shown by default */
+}
+
+/* Only hide moderation info when explicitly set not to show */
+body:not(.show-moderation) .moderation-info {
+    display: none;
+}
+
+.moderation-flagged {
+    background-color: rgba(255, 0, 0, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.moderation-safe {
+    background-color: rgba(0, 255, 0, 0.1);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+/* Dark theme moderation adjustments */
+body.dark-theme .moderation-flagged {
+    background-color: rgba(255, 0, 0, 0.15);
+    border: 1px solid rgba(255, 0, 0, 0.4);
+}
+
+body.dark-theme .moderation-safe {
+    background-color: rgba(0, 255, 0, 0.15);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.moderation-category {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Style for flagged categories */
+.moderation-category.flagged {
+    background-color: rgba(255, 0, 0, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    color: var(--flagged-color);
+}
+
+/* Style for safe categories */
+.moderation-category.safe {
+    background-color: rgba(0, 255, 0, 0.1);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    color: var(--safe-color);
+}
+
+/* Container for all categories */
+.moderation-categories {
+    margin-top: 5px;
+    padding: 3px;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 3px;
+}
+
+body.dark-theme .moderation-categories {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-theme .moderation-category {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-theme .moderation-category.flagged {
+    background-color: rgba(255, 0, 0, 0.2);
+    border: 1px solid rgba(255, 0, 0, 0.4);
+}
+
+body.dark-theme .moderation-category.safe {
+    background-color: rgba(0, 255, 0, 0.1);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.moderation-reason {
+    margin-top: 4px;
+    margin-bottom: 6px;
+    padding: 3px 5px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+    font-style: italic;
+}
+
+body.dark-theme .moderation-reason {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Moderation summary section */
+.moderation-summary {
+    background-color: var(--container-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px 0;
+    color: var(--text-color);
+}
+
+.moderation-summary h3 {
+    margin-top: 0;
+    font-size: 1.1em;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+.moderation-summary h4 {
+    color: var(--text-color);
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.moderation-stat {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    color: var(--text-color);
+}
+
+.moderation-stat-count {
+    font-weight: bold;
+}
+
+.flagged-count {
+    color: var(--flagged-color);
+}
+
+.safe-count {
+    color: var(--safe-color);
+}
+
+.moderation-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.moderation-badge.flagged {
+    background-color: rgba(255, 0, 0, 0.2);
+    color: #d32f2f;
+}
+
+.moderation-badge.safe {
+    background-color: rgba(0, 255, 0, 0.2);
+    color: #388e3c;
+}
+
+.moderation-toggle {
+    margin-left: 10px;
+    cursor: pointer;
+    user-select: none;
+    color: #58a6ff;
+    font-size: 0.8em;
+}
+
+.moderation-toggle.loading {
+    color: #888;
+    cursor: wait;
+}
+
+/* AI Response styles */
+.response-info {
+    margin-top: 2px;
+    margin-left: 25px;
+    font-size: 0.8em;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background-color: rgba(100, 100, 255, 0.1);
+    border: 1px solid rgba(100, 100, 255, 0.3);
+    display: none; /* Hidden by default */
+}
+
+.response-info p {
+    margin: 4px 0;
+}
+
+.response-toggle {
+    margin-left: 10px;
+    cursor: pointer;
+    user-select: none;
+    color: #8866ff;
+    font-size: 0.8em;
+}
+
+.response-toggle.loading {
+    color: #888;
+    cursor: wait;
+}
+
+/* Show responses option in settings */
+.show-responses .response-info {
+    display: block;
+}
+
+/* Notification styles */
+#notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 350px;
+    max-width: 100%;
+    z-index: 1050;
+}
+
+.clear-notifications {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-size: 12px;
+    float: right;
+    transition: background-color 0.2s;
+}
+
+.clear-notifications:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.notification {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+    opacity: 0.9;
+    transition: opacity 0.3s;
+}
+
+.notification:hover {
+    opacity: 1;
+}
+
+.notification.mention {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+.notification.moderation {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.notification.friend-join {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.notification.undesirable-join {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+}
+
+.notification-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.notification-message {
+    word-break: break-word;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 0.9; }
+}
+
+/* AI Provider Selection Styles */
+.ai-settings {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+}
+
+.ai-settings h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.provider-selection {
+    margin-bottom: 15px;
+}
+
+.provider-selection label {
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+.provider-settings {
+    padding: 10px;
+    border-top: 1px solid #eee;
+}
+
+#ollamaModel {
+    width: 100%;
+    padding: 5px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.info-text {
+    font-size: 0.9em;
+    color: #666;
+    margin: 5px 0;
+}
+
+.ollamaStatus {
+    font-style: italic;
+}
+
+.ollamaStatus.error {
+    color: #d9534f;
+}
+
+.ollamaStatus.success {
+    color: #4caf50;
+}
+
+/* Loading spinner styles */
+.loading-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-radius: 50%;
+    border-top-color: #007bff;
+    animation: spin 1s linear infinite;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.response-toggle.loading .loading-spinner, 
+.moderation-toggle.loading .loading-spinner {
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 0.8em;
+    color: #666;
+    font-style: italic;
+}
+
+/* Feature Settings Styling */
+.feature-settings {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+}
+
+.feature-settings h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    color: #333;
+}
+
+.feature-settings h4 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: #444;
+}
+
+.feature-toggle {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.feature-toggle:last-child {
+    border-bottom: none;
+}
+
+.feature-toggle label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.feature-toggle input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+}
+
+.notification-settings {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #eaeaea;
+    border-radius: 5px;
+}
+
+/* Enhanced notification styling */
+.notification.moderation {
+    background-color: #ffebee;
+    border-left: 4px solid #f44336;
+}
+
+.notification-reason {
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: #d32f2f;
+    font-style: italic;
+}
+
+/* Style pour le score total de modération */
+.moderation-total-score {
+    margin-left: 5px;
+    font-weight: normal;
+    font-size: 0.9em;
+    color: #555;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 1px 4px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.moderation-flagged .moderation-total-score {
+    color: #d32f2f;
+    background-color: rgba(255, 0, 0, 0.05);
+}
+
+.moderation-safe .moderation-total-score {
+    color: #388e3c;
+    background-color: rgba(0, 255, 0, 0.05);
+}
+
+/* User Lists Panel */
+#user-lists-panel {
+    position: fixed;
+    top: 70px;
+    right: 15px;
+    width: 400px;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 1050;
+    display: none;
+    border: 1px solid rgba(0,0,0,.125);
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark theme for user lists panel */
+[data-bs-theme="dark"] #user-lists-panel {
+    background-color: #2c3034;
+    border-color: #373b3e;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#user-lists-panel h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.user-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+.user-list-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Ensure card-based user-list-items are properly styled */
+.user-list-item.card {
+    display: block; /* Override the flex display */
+    padding: 0; /* Remove padding since card-body provides it */
+    border-bottom: none; /* Remove bottom border as card has its own borders */
+}
+
+.user-list-item:hover {
+    background-color: #f9f9f9;
+}
+
+.user-list-item.card .card-body {
+    padding: 1rem; /* Ensure proper padding */
+}
+
+.user-list-item.card .user-info {
+    margin-bottom: 0.5rem; /* Add some spacing before action buttons */
+}
+
+/* Make sure the user action buttons are displayed properly */
+.user-list-item.card .user-actions {
+    display: flex;
+    flex-direction: row; /* Change to row for card-based items */
+    gap: 5px;
+}
+
+.user-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.user-nickname {
+    font-weight: bold;
+    color: #333;
+    text-decoration: none;
+}
+
+.user-id {
+    font-size: 0.8em;
+    color: #888;
+}
+
+.user-last-seen {
+    font-size: 0.8em;
+    color: #888;
+    margin-top: 3px;
+}
+
+.undesirable-reason {
+    font-size: 0.9em;
+    color: #c00;
+    margin-top: 3px;
+    display: block;
+}
+
+.user-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.user-actions button {
+    padding: 5px 10px;
+    background-color: #f1f1f1;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+}
+
+.user-actions button:hover {
+    background-color: #e0e0e0;
+}
+
+.user-actions button.remove-friend,
+.user-actions button.remove-undesirable {
+    color: #c00;
+}
+
+.user-actions button.move-to-undesirable {
+    color: #c00;
+}
+
+.user-actions button.move-to-friend {
+    color: #080;
+}
+
+.tabs {
+    display: flex;
+    margin-bottom: 15px;
+}
+
+.tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    background-color: #f1f1f1;
+    border: 1px solid #ddd;
+    cursor: pointer;
+}
+
+.tab.active {
+    background-color: #fff;
+    border-bottom-color: #fff;
+}
+
+.username-container {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+}
+
+.user-actions-dropdown {
+    display: inline-block;
+    position: relative;
+    margin-left: 5px;
+}
+
+.user-actions-toggle {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0 5px;
+}
+
+.user-actions-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: none;
+    z-index: 100;
+    min-width: 150px;
+}
+
+.user-actions-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.user-actions-menu button:last-child {
+    border-bottom: none;
+}
+
+.user-actions-menu button:hover {
+    background-color: #f5f5f5;
+}
+
+.user-actions-menu button.add-to-undesirables {
+    color: #c00;
+}
+
+.user-actions-menu button.add-to-friends {
+    color: #080;
+}
+
+/* Empty list message */
+.empty-list-message {
+    padding: 20px;
+    text-align: center;
+    color: #888;
+    font-style: italic;
+}
+
+/* Friend message highlighting */
+.friend-message {
+    background-color: rgba(144, 238, 144, 0.1);
+    border-left: 3px solid #90ee90;
+}
+
+/* Undesirable message highlighting */
+.undesirable-message {
+    background-color: rgba(255, 0, 0, 0.05);
+    border-left: 3px solid #ff0000;
+}
+
+.undesirable-message .comment-text {
+    color: #cc0000;
+}
+
+/* Join notification styling */
+.notification.friend-join {
+    background-color: #4CAF50;
+    border-left: 4px solid #2E7D32;
+}
+
+.notification.undesirable-join {
+    background-color: #F44336;
+    border-left: 4px solid #B71C1C;
+}
+
+.notification .notification-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Notification styles */
+#notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    max-width: 350px;
+}
+
+.notification {
+    padding: 15px;
+    background-color: #333;
+    color: white;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* User lists toggle button */
+#toggleUserLists {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    padding: 8px 15px;
+    z-index: 1049;
+    transition: all 0.2s ease;
+}
+
+#toggleUserLists.active {
+    background-color: var(--bs-primary);
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Dark Theme Styles */
+:root {
+    --light-bg-color: #ffffff;
+    --light-text-color: #333333;
+    --light-header-bg: #f1f1f1;
+    --light-container-bg: #ffffff;
+    --light-highlight-color: #e6e6e6;
+    --light-link-color: #0078d7;
+    --light-button-bg: #f0f0f0;
+    --light-button-text: #333333;
+    --light-button-hover: #e0e0e0;
+    --light-border-color: #dddddd;
+    --light-flagged-color: #d32f2f;
+    --light-safe-color: #388e3c;
+    
+    --dark-bg-color: #1e1e1e;
+    --dark-text-color: #e0e0e0;
+    --dark-header-bg: #2d2d2d;
+    --dark-container-bg: #252525;
+    --dark-highlight-color: #3a3a3a;
+    --dark-link-color: #4dacff;
+    --dark-button-bg: #3a3a3a;
+    --dark-button-text: #e0e0e0;
+    --dark-button-hover: #4a4a4a;
+    --dark-border-color: #444444;
+    --dark-flagged-color: #ff6c6c;
+    --dark-safe-color: #65da6e;
+}
+
+/* Light theme (default) */
+body {
+    --bg-color: var(--light-bg-color);
+    --text-color: var(--light-text-color);
+    --header-bg: var(--light-header-bg);
+    --container-bg: var(--light-container-bg);
+    --highlight-color: var(--light-highlight-color);
+    --link-color: var(--light-link-color);
+    --button-bg: var(--light-button-bg);
+    --button-text: var(--light-button-text);
+    --button-hover: var(--light-button-hover);
+    --border-color: var(--light-border-color);
+    --flagged-color: var(--light-flagged-color);
+    --safe-color: var(--light-safe-color);
+    
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* Dark theme */
+body.dark-theme {
+    --bg-color: var(--dark-bg-color);
+    --text-color: var(--dark-text-color);
+    --header-bg: var(--dark-header-bg);
+    --container-bg: var(--dark-container-bg);
+    --highlight-color: var(--dark-highlight-color);
+    --link-color: var(--dark-link-color);
+    --button-bg: var(--dark-button-bg);
+    --button-text: var(--dark-button-text);
+    --button-hover: var(--dark-button-hover);
+    --border-color: var(--dark-border-color);
+    --flagged-color: var(--dark-flagged-color);
+    --safe-color: var(--dark-safe-color);
+}
+
+/* Apply theme variables to elements */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-color);
+}
+
+a {
+    color: var(--link-color);
+}
+
+.head, .containerheader {
+    background-color: var(--header-bg);
+    color: var(--text-color);
+}
+
+.chatcontainer, .giftcontainer, .eventcontainer, #user-lists-panel, .notification {
+    background-color: var(--container-bg);
+    border-color: var(--border-color);
+}
+
+input[type="text"], input[type="password"], select {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+input[type="button"], button, #toggleUserLists {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--border-color);
+}
+
+input[type="button"]:hover, button:hover, #toggleUserLists:hover {
+    background-color: var(--button-hover);
+}
+
+.tab {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+}
+
+.tab.active {
+    background-color: var(--highlight-color);
+}
+
+.user-list-item {
+    background-color: var(--container-bg);
+    border-color: var(--border-color);
+}
+
+.user-list-item:hover {
+    background-color: var(--highlight-color);
+}
+
+.splitchattable, .splitstatetable, #stateText {
+    background-color: var(--container-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+.user-actions-menu {
+    background-color: var(--container-bg);
+    border-color: var(--border-color);
+}
+
+.ai-settings, .feature-settings, .notification-settings, .theme-settings {
+    background-color: var(--container-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+/* Transition for smooth theme switching */
+body, body * {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark theme specific notification styling */
+body.dark-theme .notification {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+}
+
+body.dark-theme .clear-notifications {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+body.dark-theme .clear-notifications:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Custom CSS that works with Bootstrap */
+
+/* Override for container heights */
+.chatcontainer, .giftcontainer, .eventcontainer {
+    overflow-y: scroll;
+    height: calc(100vh - 240px);
+    word-wrap: break-word;
+    padding: 15px;
+}
+
+.eventcontainer {
+    height: calc(100vh - 90px);
+}
+
+.miniprofilepicture {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+}
+
+.gifticon {
+    height: 50px;
+    width: 50px;
+    margin-right: 10px;
+}
+
+/* User lists panel */
+#user-lists-panel {
+    position: fixed;
+    top: 70px;
+    right: 15px;
+    width: 400px;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 1050;
+    display: none;
+    border: 1px solid rgba(0,0,0,.125);
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Notification styles */
+#notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 350px;
+    max-width: 100%;
+    z-index: 1050;
+}
+
+.notification {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+    opacity: 0.9;
+    transition: opacity 0.3s;
+}
+
+.notification:hover {
+    opacity: 1;
+}
+
+.notification.mention {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+.notification.moderation {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.notification.friend-join {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.notification.undesirable-join {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+}
+
+.notification-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.notification-close {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background-color: transparent;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notification-close:hover {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.notification-close::before,
+.notification-close::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 2px;
+    background-color: currentColor;
+}
+
+.notification-close::before {
+    transform: rotate(45deg);
+}
+
+.notification-close::after {
+    transform: rotate(-45deg);
+}
+
+[data-bs-theme="dark"] .notification-close:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 0.9; }
+}
+
+/* Moderation styles */
+.moderation-info {
+    margin-top: 2px;
+    margin-left: 25px;
+    font-size: 0.8em;
+    padding: 3px 6px;
+    border-radius: 4px;
+    display: block;
+}
+
+body:not(.show-moderation) .moderation-info {
+    display: none;
+}
+
+.moderation-flagged {
+    background-color: rgba(255, 0, 0, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.moderation-safe {
+    background-color: rgba(0, 255, 0, 0.1);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.moderation-category {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.moderation-category.flagged {
+    background-color: rgba(255, 0, 0, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    color: var(--flagged-color);
+}
+
+.moderation-category.safe {
+    background-color: rgba(0, 255, 0, 0.1);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    color: var(--safe-color);
+}
+
+.moderation-categories {
+    margin-top: 5px;
+    padding: 3px;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 3px;
+}
+
+/* Toast-like notification for mentions */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    max-width: 350px;
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 4px;
+    padding: 12px 15px;
+    z-index: 1060;
+    display: none;
+}
+
+/* Loading spinners */
+.loading-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-radius: 50%;
+    border-top-color: #007bff;
+    animation: spin 1s linear infinite;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.response-toggle.loading .loading-spinner, 
+.moderation-toggle.loading .loading-spinner {
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Dark theme specific styles */
+[data-bs-theme="dark"] {
+    --bs-body-bg: #212529;
+    --bs-body-color: #e9ecef;
+}
+
+[data-bs-theme="dark"] .card {
+    background-color: #2c3034;
+    border-color: #373b3e;
+}
+
+[data-bs-theme="dark"] .card-header {
+    background-color: #343a40;
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .nav-tabs {
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link.active {
+    background-color: #343a40;
+    border-color: #495057 #495057 #343a40;
+    color: #e9ecef;
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link:not(.active) {
+    color: #adb5bd;
+}
+
+[data-bs-theme="dark"] pre,
+[data-bs-theme="dark"] #stateText {
+    background-color: #343a40 !important;
+    color: #e9ecef;
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+    background-color: #343a40;
+    border-color: #495057;
+    color: #e9ecef;
+}
+
+[data-bs-theme="dark"] .input-group-text {
+    background-color: #495057;
+    border-color: #495057;
+    color: #e9ecef;
+}
+
+[data-bs-theme="dark"] .form-text {
+    color: #adb5bd;
+}
+
+/* Chat item styling */
+.chatitem {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    transition: background-color 0.2s;
+}
+
+.chatitem:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+[data-bs-theme="dark"] .chatitem {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+[data-bs-theme="dark"] .chatitem:hover {
+    background-color: rgba(255,255,255,0.05);
+}
+
+.username-container {
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.usernamelink {
+    text-decoration: none;
+}
+
+.chatitem .comment-text {
+    word-break: break-word;
+}
+
+/* Gift items */
+.giftitem {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+}
+
+[data-bs-theme="dark"] .giftitem {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.usernamelink {
+    color: var(--bs-primary);
+}
+
+[data-bs-theme="dark"] .usernamelink {
+    color: #8ab4f8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .chatcontainer, .giftcontainer {
+        height: 50vh;
+        min-width: auto;
+    }
+    
+    #user-lists-panel {
+        width: 90vw;
+        top: 80px;
+    }
+}
+
+/* Friend/Undesirable badges */
+.user-status.friend {
+    background-color: var(--bs-primary);
+}
+
+.user-status.undesirable {
+    background-color: var(--bs-danger);
+}
+
+.undesirable-reason {
+    display: block;
+    font-style: italic;
+    margin-top: 4px;
+    color: #6c757d;
+}
+
+[data-bs-theme="dark"] .undesirable-reason {
+    color: #adb5bd;
+}
+
+/* Toast position fix */
+.toast {
+    z-index: 1070;
+}
+
+/* Define custom variables for light/dark themes */
+:root {
+    --flagged-color: #d32f2f;
+    --safe-color: #388e3c;
+}
+
+[data-bs-theme="dark"] {
+    --flagged-color: #ef5350;
+    --safe-color: #66bb6a;
+}
+
+/* Dark theme moderation adjustments */
+[data-bs-theme="dark"] .moderation-flagged {
+    background-color: rgba(255, 0, 0, 0.15);
+    border: 1px solid rgba(255, 0, 0, 0.4);
+}
+
+[data-bs-theme="dark"] .moderation-safe {
+    background-color: rgba(0, 255, 0, 0.15);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .moderation-categories {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme="dark"] .moderation-category {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .moderation-category.flagged {
+    background-color: rgba(255, 0, 0, 0.2);
+    border: 1px solid rgba(255, 0, 0, 0.4);
+}
+
+[data-bs-theme="dark"] .moderation-category.safe {
+    background-color: rgba(0, 255, 0, 0.1);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+/* Make sure both tab panes display their content properly */
+#friends-tab, #undesirables-tab, #search-tab {
+    padding: 10px;
+}
+
+/* Make all tab-panes have the same visibility rules */
+.tab-pane.fade {
+    opacity: 0;
+    transition: opacity .15s linear;
+}
+
+.tab-pane.fade.show {
+    opacity: 1;
+}
+
+/* Fix for Bootstrap tab system sometimes not showing content properly */
+.tab-content > .tab-pane {
+    display: none;
+}
+
+.tab-content > .active {
+    display: block;
+}
+
+/* Ensure proper visibility for the undesirables list and items */
+#undesirablesList {
+    display: block;
+    visibility: visible;
+}
+
+.user-list-item.card {
+    display: block; /* Override the flex display */
+    padding: 0; /* Remove padding since card-body provides it */
+    border-bottom: none; /* Remove bottom border as card has its own borders */
+    margin-bottom: 10px; /* Ensure some spacing between items */
+}

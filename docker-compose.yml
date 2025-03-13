@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    volumes:
+      # Persist data directory
+      - ./data:/app/data
+    restart: unless-stopped
+    # Add healthcheck to ensure the app is running properly
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# Networks are removed as they're not needed without the Ollama service 
