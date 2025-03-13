@@ -17,7 +17,7 @@ const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: "dummy-key",
 });
 
 // Enable cross origin resource sharing
@@ -529,6 +529,6 @@ app.delete('/api/users/undesirables/:tiktokId', async (req, res) => {
 });
 
 // Start http listener
-const port = process.env.PORT || 8081;
+const port = 8081;
 httpServer.listen(port);
 console.info(`Server running! Please visit http://localhost:${port}`);

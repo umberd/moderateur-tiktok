@@ -16,8 +16,17 @@ If you have problems with Node.js, you can also just open the `index.html` from 
 
 
 ## Run in electron
+Developpement
 
 `npm start`
+
+Build
+`npm run pack`
+`npm run dist`
+
+
+`npx electron-builder --win`
+`npx electron-builder --mac`
 
 
 

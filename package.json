@@ -8,6 +8,17 @@
     "dist": "electron-builder"
   },
   "build": {
+    "extraResources": [
+      {
+        "from": "data/",
+        "to": "data/",
+        "filter": ["tiktok_chat.db"]
+      },
+      {
+        "from": ".env",
+        "to": ".env"
+      }
+    ],
     "appId": "com.monapp.electron",
     "mac": {
       "category": "public.app-category.productivity"
