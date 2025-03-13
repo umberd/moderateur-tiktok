@@ -11,10 +11,7 @@ This repository contains Docker configuration for the TikTok Chat Reader applica
 ## Getting Started
 
 1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/TikTok-Chat-Reader.git
-   cd TikTok-Chat-Reader
-   ```
+
 
 2. Create a `.env` file in the root directory with your configuration:
    ```

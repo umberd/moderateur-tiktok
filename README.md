@@ -1,7 +1,4 @@
-# TikTok-Chat-Reader
-A chat reader for <a href="https://www.tiktok.com/live">TikTok LIVE</a> utilizing <a href="https://github.com/zerodytrash/TikTok-Live-Connector">TikTok-Live-Connector</a> and <a href="https://socket.io/">Socket.IO</a> to forward the data to the client. This demo project uses the unofficial TikTok API to retrieve chat comments, gifts and other events from TikTok LIVE.
 
-## Demo: https://tiktok-chat-reader.zerody.one/
 
 ## Installation
 To run the chat reader locally, follow these steps:
@@ -16,7 +13,13 @@ Now you should see the following message: `Server running! Please visit http://l
 Simply open http://localhost:8091/ in your browser. Thats it.
 
 If you have problems with Node.js, you can also just open the `index.html` from the `public` folder.<br>
-This will use the server backend of the [demo site](https://tiktok-chat-reader.zerody.one/), which is sufficient for testing purposes. If you want to offer it to others or make many connections at the same time, please consider using your own server.
+
+
+## Run in electron
+
+`npm start`
+
+
 
 ## AI Response Suggestions
 
@@ -41,13 +44,3 @@ To use OpenAI for response suggestions:
 
 > **Note**: The system automatically filters out any model "thinking" content (enclosed in `<thinking>` tags) to provide cleaner suggested responses.
 
-## Screenshot
-
-![TikTok LIVE Chat Reader (Demo)](https://user-images.githubusercontent.com/59258980/153956504-c585b14b-a50e-43f0-a994-64adcaface2e.png)
-
-
-## Todo
-
-- analyser les x dernier messages pour plus de contexte de sugestion de réponse
-- notification si qqn veut monter par analyse llm
-- répondre par copier/coller dans le chat
