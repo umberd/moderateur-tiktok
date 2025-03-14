@@ -74,7 +74,7 @@ jobs:
         cd frontend
         npm ci
         npm run build
-      
+        
     - name: Install native dependencies (macOS)
       if: matrix.os == 'macos-latest'
       run: |
@@ -103,6 +103,13 @@ jobs:
       run: |
         cd dist/win-unpacked
         7z a -r ../TikTok-Moderator-Windows-Portable-v${{ env.VERSION }}.zip *
+      shell: bash
+        
+    - name: Create ZIP for macOS Executable
+      if: matrix.os == 'macos-latest'
+      run: |
+        cd dist/mac
+        zip -r ../TikTok-Moderator-macOS-Portable-v${{ env.VERSION }}.zip *.app
       shell: bash
         
     - name: Create ZIP for Linux Executable
