@@ -1,18 +1,28 @@
 {
-  "name": "chat-tiktok",
-  "version": "1.0.0",
+  "name": "tiktok-moderator",
+  "productName": "TikTok Moderator",
+  "version": "1.0.4",
+  "description": "TikTok Live Chat Moderator App with AI Response Suggestions",
+  "author": {
+    "name": "TikTok Moderator Team"
+  },
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
   },
   "build": {
     "extraResources": [
       {
         "from": "data/",
         "to": "data/",
-        "filter": ["tiktok_chat.db"]
+        "filter": [
+          "tiktok_chat.db"
+        ]
       },
       {
         "from": "public/",
@@ -25,11 +35,43 @@
     ],
     "appId": "com.samlepirate.tiktok-moderator",
     "mac": {
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "build/icon.icns"
     },
     "win": {
-      "target": "nsis"
-    }
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": [
+        "deb",
+        "AppImage"
+      ],
+      "category": "Social",
+      "maintainer": "TikTok Moderator Team",
+      "icon": "build/icon.png"
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ]
   },
   "dependencies": {
     "axios": "^1.8.2",
