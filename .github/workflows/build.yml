@@ -3,10 +3,14 @@ name: Build Application
 on:
   push:
     branches: [ main, master ]
+    paths:
+      - 'package.json'
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
     # Allows manual trigger from the Actions tab
+  repository_dispatch:
+    types: [version-updated]
 
 jobs:
   build:
@@ -29,6 +33,17 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Get version
+      id: get_version
+      run: |
+        if [ "${{ github.event_name }}" == "repository_dispatch" ]; then
+          echo "VERSION=${{ github.event.client_payload.version }}" >> $GITHUB_ENV
+        else
+          VERSION=$(node -e "console.log(require('./package.json').version)")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+        fi
+      shell: bash
 
     - name: Setup Python (macOS)
       if: matrix.os == 'macos-latest'
@@ -84,3 +99,16 @@ jobs:
           dist/*.deb
           dist/*.AppImage
         retention-days: 7
+
+    - name: Upload Release Asset
+      if: github.event_name == 'repository_dispatch' && github.event.action == 'version-updated'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ env.VERSION }}
+        files: |
+          dist/*.exe
+          dist/*.dmg
+          dist/*.deb
+          dist/*.AppImage
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
