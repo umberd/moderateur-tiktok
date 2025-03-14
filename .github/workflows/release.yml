@@ -102,9 +102,15 @@ jobs:
           
           ## Installation
           
-          - Windows: Download the .exe installer
-          - macOS: Download the .dmg file
-          - Linux: Download the .deb package or AppImage
+          ### Installers
+          - Windows: Download the `.exe` installer
+          - macOS: Download the `.dmg` file
+          - Linux: Download the `.deb` package or `.AppImage`
+          
+          ### Portable Versions
+          - Windows: Download the `TikTok-Moderator-Windows-Portable-v${{ env.NEW_VERSION }}.zip` archive
+          - macOS: Download the `TikTok-Moderator-macOS-Portable-v${{ env.NEW_VERSION }}.zip` archive
+          - Linux: Download the `TikTok-Moderator-Linux-Portable-v${{ env.NEW_VERSION }}.zip` archive
         draft: false
         prerelease: false
         token: ${{ secrets.GITHUB_TOKEN }}
