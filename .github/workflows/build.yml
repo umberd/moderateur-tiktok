@@ -88,7 +88,7 @@ jobs:
         
     - name: Build for macOS
       if: matrix.os == 'macos-latest'
-      run: npx electron-builder --mac --arm64 --dir && npx electron-builder --mac --arm64
+      run: npx electron-builder --mac --dir && npx electron-builder --mac
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
@@ -103,13 +103,6 @@ jobs:
       run: |
         cd dist/win-unpacked
         7z a -r ../TikTok-Moderator-Windows-Portable-v${{ env.VERSION }}.zip *
-      shell: bash
-        
-    - name: Create ZIP for macOS Executable
-      if: matrix.os == 'macos-latest'
-      run: |
-        cd dist/mac
-        zip -r ../TikTok-Moderator-macOS-Portable-v${{ env.VERSION }}.zip *.app
       shell: bash
         
     - name: Create ZIP for Linux Executable
