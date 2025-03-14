@@ -1,7 +1,7 @@
 {
   "name": "tiktok-moderator",
   "productName": "TikTok Moderator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TikTok Live Chat Moderator App with AI Response Suggestions",
   "author": {
     "name": "TikTok Moderator Team"
@@ -20,7 +20,9 @@
       {
         "from": "data/",
         "to": "data/",
-        "filter": ["tiktok_chat.db"]
+        "filter": [
+          "tiktok_chat.db"
+        ]
       },
       {
         "from": "public/",
@@ -34,7 +36,10 @@
     "appId": "com.samlepirate.tiktok-moderator",
     "mac": {
       "category": "public.app-category.productivity",
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "icon": "build/icon.icns"
     },
     "win": {
@@ -42,7 +47,10 @@
       "icon": "build/icon.ico"
     },
     "linux": {
-      "target": ["deb", "AppImage"],
+      "target": [
+        "deb",
+        "AppImage"
+      ],
       "category": "Social",
       "maintainer": "TikTok Moderator Team",
       "icon": "build/icon.png"
