@@ -9,6 +9,7 @@ const { OpenAI } = require('openai');
 const axios = require('axios');
 const db = require('./db'); // Import our database module
 const path = require('path'); // Add path module
+const cors = require('cors'); // Import cors package
 
 const app = express();
 const httpServer = createServer(app);
@@ -20,6 +21,13 @@ const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
 const openai = new OpenAI({
     apiKey: "dummy-key",
 });
+
+// Apply CORS middleware to Express
+app.use(cors({
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Enable cross origin resource sharing
 const io = new Server(httpServer, {
@@ -145,6 +153,115 @@ Please respond in XML format using these tags and only these tags:
     }
 }
 
+async function generateResponseModeration(text, apiKey = null,moderatePrompt) {
+    try {
+        // Use provided API key or fall back to environment variable
+        const openaiClient = apiKey ? 
+            new OpenAI({ apiKey }) : 
+            openai;
+
+        
+        
+            
+        const response = await openaiClient.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: moderatePrompt },
+                { role: "user", content: text }
+            ],
+            max_tokens: 100,
+            temperature: 0.7,
+        });
+        
+        return response.choices[0].message.content;
+    } catch (error) {
+        console.error('Error generating response with OpenAI:', error);
+        return null;
+    }
+}
+
+async function moderateTextWith4O(text,apiKey = null) {
+    try {
+        const moderationPrompt = `
+You are a content moderation system. Analyze the following message and determine if it contains harmful content.
+Any type of insult or racism or patriotism or misgenderation or any other type of discrimination is harmful content.
+Be really sensitive to everything related to sex, gender, race, religion, etc.
+Examples of harmful content:
+"France aux Français" is harassment at 1.
+"La France aux Arabes" is harassment at 1.
+"La France aux Africains" is harassment at 1.
+"La France aux Asiatiques" is harassment at 1.
+"La France aux Européens" is harassment at 1.
+"La France aux Américains" is harassment at 1.
+
+if any harmful content is included in the message, flag it as true.
+Don't think. in the think process, you just write "ok"
+I want to make sure everything is super safe.
+Make sure you are very sensitive to everything related to sex, gender, race, religion, etc.
+You speak french, so don't translate the message.
+Please respond in XML format using these tags and only these tags:
+<flagged>true/false</flagged>
+<reason>Specify the reason if flagged, such as: harassment, hate_speech, sexual, violence, self_harm, illegal_activity, politeness,wierd joke,conspiracy,racism, etc.</reason>
+<category_scores>0.0 to 1.0 indicating severity</category_scores>
+`;
+
+        const response = await generateResponseModeration(text, apiKey, moderationPrompt);
+        
+        const content = response;
+        
+
+        const ccontent=removeThinkingContent(content);
+        
+        // Parse XML response
+        const flaggedMatch = ccontent.match(/<flagged>(true|false)<\/flagged>/i);
+        const reasonMatch = ccontent.match(/<reason>(.*?)<\/reason>/i);
+        const scoreMatch = ccontent.match(/<category_scores>(.*?)<\/category_scores>/i);
+        
+        const flagged = flaggedMatch ? flaggedMatch[1].toLowerCase() === 'true' : false;
+        const reason = reasonMatch ? reasonMatch[1] : '';
+        const score = scoreMatch ? parseFloat(scoreMatch[1]) : 0.0;
+        if(flagged){
+            console.log('-------------GPT-4O-------------');
+            console.log('Flagged comment :', text);
+            console.log('Reason:', reason);
+            console.log('--------------------------------');
+        }
+        
+        // Create a response format similar to OpenAI's moderation
+        return {
+            flagged: flagged,
+            categories: {
+                harassment: reason.includes('harassment'),
+                hate: reason.includes('hate'),
+                sexual: reason.includes('sexual'),
+                violence: reason.includes('violence'),
+                self_harm: reason.includes('self_harm'),
+                illegal: reason.includes('illegal'),
+                politeness: reason.includes('politeness'),
+                wierd_joke: reason.includes('wierd joke'),
+                conspiracy: reason.includes('conspiracy'),
+                racism: reason.includes('racism'),
+            },
+            category_scores: {
+                harassment: reason.includes('harassment') ? score : 0,
+                hate: reason.includes('hate') ? score : 0,
+                sexual: reason.includes('sexual') ? score : 0,
+                violence: reason.includes('violence') ? score : 0,
+                self_harm: reason.includes('self_harm') ? score : 0,
+                illegal: reason.includes('illegal') ? score : 0,
+                politeness: reason.includes('politeness') ? score : 0,
+                wierd_joke: reason.includes('wierd joke') ? score : 0,
+                conspiracy: reason.includes('conspiracy') ? score : 0,
+                racism: reason.includes('racism') ? score : 0,
+            },
+            ollama_reason: reason
+        };
+    } catch (error) {
+        console.error('Error during Ollama moderation:', error);
+        return null;
+    }
+}
+
 const systemPrompt = `
 Vous êtes un assistant qui réponds au chat en direct TikTok.
 Vous recevrez des commentaires du chat provenant du canal en direct. Pour chaque nouvelle mise à jour du chat, vous repondrez.
@@ -243,6 +360,8 @@ async function generateResponse(text, provider = 'openai', model = null, apiKey 
     }
 }
 
+
+
 io.on('connection', (socket) => {
     let tiktokConnectionWrapper;
 
@@ -320,11 +439,12 @@ io.on('connection', (socket) => {
         // Handle chat messages with moderation
         tiktokConnectionWrapper.connection.on('chat', async (msg) => {
             // Send message immediately
-            const initialMsg = { ...msg, pendingModeration: true, pendingResponse: true };
+            const initialMsg = { ...msg,timestamp:new Date(), pendingModeration: true, pendingResponse: true };
             socket.emit('chat', initialMsg);
             
             // Apply moderation to comment based on provider
-            if (msg.comment) {                
+            if (msg.comment) {   
+                console.log(msg.nickname + ' : ' + msg.comment);             
                 if (socket.showModeration && socket.aiProvider === 'ollama' && socket.aiModel) {
                     const moderationResult = await moderateTextWithOllama(msg.comment, socket.aiModel);
                     if (moderationResult) {
@@ -340,8 +460,8 @@ io.on('connection', (socket) => {
                         console.log('No moderation result');
                     }
                 } else if (socket.showModeration && (socket.openaiApiKey || process.env.OPENAI_API_KEY)) {
-                    console.log('Moderation with OpenAI');
-                    console.log(msg.comment);
+                    //console.log('Moderation with OpenAI');
+                    //console.log(msg.comment);
                     const moderationResult = await moderateText(msg.comment, socket.openaiApiKey || process.env.OPENAI_API_KEY);
                     //console.log(moderationResult);
                     if (moderationResult) {
@@ -355,6 +475,12 @@ io.on('connection', (socket) => {
                                 if (value) {
                                     console.log(`${category}: ${moderationResult.category_scores[category].toFixed(3)}`);
                                 }
+                            }
+                        }else{
+                            //add the more subtle moderation
+                            const moderationResult = await moderateTextWith4O(msg.comment, socket.openaiApiKey);
+                            if (moderationResult) {
+                                msg.moderation = moderationResult;
                             }
                         }
                     }
@@ -441,7 +567,7 @@ setInterval(() => {
 // Serve frontend files - Use absolute path that works in both development and production
 //const publicPath = path.join(process.resourcesPath || __dirname, 'public');
 
-const publicPath = path.join( __dirname, 'public');
+const publicPath = path.join( __dirname, 'frontend/dist');
 console.log(publicPath);
 
 app.use(express.static(publicPath));
