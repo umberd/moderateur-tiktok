@@ -1,0 +1,69 @@
+name: Build Application
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    # Allows manual trigger from the Actions tab
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            output_name: win
+            artifact_name: TikTok-Moderator-Windows
+          - os: macos-latest
+            output_name: mac
+            artifact_name: TikTok-Moderator-macOS
+          - os: ubuntu-latest
+            output_name: linux
+            artifact_name: TikTok-Moderator-Linux
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build for Windows (NSIS)
+      if: matrix.os == 'windows-latest'
+      run: npx electron-builder --win --x64
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Build for macOS
+      if: matrix.os == 'macos-latest'
+      run: npx electron-builder --mac --x64
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Build for Linux (deb)
+      if: matrix.os == 'ubuntu-latest'
+      run: npx electron-builder --linux deb --x64
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: |
+          dist/*.exe
+          dist/*.dmg
+          dist/*.deb
+          dist/*.AppImage
+        retention-days: 7
