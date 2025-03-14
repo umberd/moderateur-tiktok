@@ -17,6 +17,8 @@ import GiftsContainer from './components/GiftsContainer'
 import UserLists from './components/UserLists'
 import ModerationStats from './components/ModerationStats'
 import Notifications from './components/Notifications'
+import MazicList from './components/MazicList'
+import TopLikers from './components/TopLikers'
 
 function App() {
   // Connection state
@@ -30,9 +32,10 @@ function App() {
   const [likeCount, setLikeCount] = useState(0)
   const [diamondsCount, setDiamondsCount] = useState(0)
   
-  // Chat & gifts state
+  // Chat & gifts state & likes
   const [chatMessages, setChatMessages] = useState([])
   const [gifts, setGifts] = useState([])
+  const [likes, setLikes] = useState([])
   
   // AI response state
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false)
@@ -49,6 +52,11 @@ function App() {
   const [darkTheme, setDarkTheme] = useState(true)
   const [enableFlvStream, setEnableFlvStream] = useState(true)
   const [autoScroll, setAutoScroll] = useState(true)
+
+  //mazic state
+  const [mazicList, setMazicList] = useState([]);
+  const [mazicPrefix, setMazicPrefix] = useState('mazic:');
+  const [allChatMessages, setAllChatMessages] = useState([]); // Store all chat messages to reprocess when prefix changes
   
   // User lists
   const [friendsList, setFriendsList] = useState([])
@@ -98,13 +106,7 @@ function App() {
     // Save to localStorage as fallback
     localStorage.setItem('darkTheme', isDark);
     
-    // Try to save to API
-    try {
-      await UserApi.saveUserPreferences({ darkTheme: isDark });
-    } catch (error) {
-      console.error('Error saving theme preference to API:', error);
-      // Continue with local storage fallback
-    }
+    
   };
   
   // Initialize connection
@@ -120,7 +122,7 @@ function App() {
     const loadSettingsFromApi = async () => {
       try {
         // Try to get preferences from API first
-        const preferences = await UserApi.getUserPreferences();
+        const preferences = null;
         
         // Apply theme from API
         if (preferences.darkTheme !== undefined) {
@@ -175,6 +177,7 @@ function App() {
         loadSetting('aiProvider', setAiProvider, 'openai');
         loadSetting('aiModel', setAiModel, '');
         loadSetting('autoScroll', setAutoScroll, true);
+        loadSetting('mazicPrefix', setMazicPrefix, 'mazic:');
       }
     };
     
@@ -249,7 +252,7 @@ function App() {
     if (connectionRef.current) {
       // Disconnect the socket before resetting state
       if (connectionRef.current.socket) {
-        console.log('Disconnecting socket...');
+        //console.log('Disconnecting socket...');
         connectionRef.current.socket.disconnect();
       }
       
@@ -263,6 +266,7 @@ function App() {
     setIsConnected(false)
     setChatMessages([])
     setGifts([])
+    setLikes([])
     setViewerCount(0)
     setLikeCount(0)
     setDiamondsCount(0)
@@ -279,7 +283,34 @@ function App() {
     })
     
     conn.on('like', (data) => {
+      const userStatus = checkUserStatus(data);
       setLikeCount(prevCount => prevCount + data.likeCount)
+      console.log("Got the like :"+data.likeCount+" from "+data.nickname);
+
+      // Update likes array using setLikes to maintain state properly
+      setLikes(prevLikes => {
+        // Check if user already exists in the likes array
+        const existingLikerIndex = prevLikes.findIndex(liker => liker.uniqueId === data.uniqueId);
+        
+        if (existingLikerIndex !== -1) {
+          // User exists, update their like count
+          const updatedLikes = [...prevLikes];
+          updatedLikes[existingLikerIndex] = {
+            ...updatedLikes[existingLikerIndex],
+            likeCount: updatedLikes[existingLikerIndex].likeCount + data.likeCount,
+            userStatus
+          };
+          return updatedLikes;
+        } else {
+          // User doesn't exist, add them to the likes array
+          return [...prevLikes, {
+            uniqueId: data.uniqueId,
+            nickname: data.nickname,
+            likeCount: data.likeCount,
+            userStatus
+          }];
+        }
+      });
     })
     
     conn.on('gift', (data) => {
@@ -300,11 +331,33 @@ function App() {
     
     // Chat messages - now using socket approach
     conn.on('chat', (data) => {
-      const userStatus = checkUserStatus(data)
+      const userStatus = checkUserStatus(data);
+      //get the prefix from local storage
+      
+
       
       // We now receive initial message from the server with pending moderation/response flags
       // Add message to chat using sanitized text to prevent XSS
       const sanitizedComment = sanitize(data.comment)
+      console.log("Got the comment :"+sanitizedComment);
+
+      // Add to all chat messages for mazic filtering
+      setAllChatMessages(prev => {
+        const newMessages = [...prev, {
+          ...data,
+          sanitizedComment,
+          comment: data.comment, // Ensure we keep the original comment
+          nickname: data.nickname // Ensure we keep the nickname
+        }];
+        // Keep the most recent 10000 messages
+        if (newMessages.length > 10000) {
+          return newMessages.slice(newMessages.length - 10000);
+        }
+        return newMessages;
+      });
+
+      // Process this message with current mazic prefix
+      processMessageWithCurrentPrefix(data);
 
       // Check for mentions
       if (enableMentionNotifications && yourUsername && data.comment.toLowerCase().includes(yourUsername.toLowerCase())) {
@@ -370,9 +423,7 @@ function App() {
     })
     
     // Available Ollama models
-    conn.on('ollamaModels', (models) => {
-      // Store available Ollama models
-      console.log('Received Ollama models:', models)
+    conn.on('ollamaModels', () => {
       // If you have state for available models, update it here
     })
     
@@ -435,18 +486,15 @@ function App() {
   const checkUserStatus = (data) => {
     // Check if user is in friends or undesirables list
     // userId from chat messages will match with tiktokId in our lists
-    console.log(data)
+    //console.log(data)
     const userId = data.uniqueId;
-
-    console.log(undesirablesList);
-    
+        
     // Handle both snake_case (from DB) and camelCase (from transformed data)
-    const isFriend = friendsList.some(friend => friend.tiktok_id === userId);
+    const isFriend = friendsList.some(friend => friend.tiktokId === userId);
     
-    const isUndesirable = undesirablesList.some(undesirable => undesirable.tiktok_id === userId);
+    const isUndesirable = undesirablesList.some(undesirable => undesirable.tiktokId === userId);
 
-    console.log(userId+" is friend: "+isFriend)
-    console.log(userId+" is undesirable: "+isUndesirable)
+    
     
     return {
       isFriend,
@@ -709,8 +757,8 @@ function App() {
   // Function to request browser notification permission
   const requestNotificationPermission = () => {
     if ('Notification' in window) {
-      Notification.requestPermission().then(permission => {
-        console.log('Notification permission:', permission);
+      Notification.requestPermission().then(() => {
+        // Permission handled
       });
     }
   }
@@ -736,8 +784,8 @@ function App() {
     const notification = {
       id: Date.now(),
       type: notificationType,
-      title: `${userType} ${data.uniqueId} joined the stream`,
-      message: `${data.uniqueId} has joined the stream`,
+      title: `${userType} ${data.nickname} joined the stream`,
+      message: `${data.nickname} has joined the stream`,
       timestamp: new Date()
     };
     
@@ -750,12 +798,70 @@ function App() {
     
     // Try to show browser notification if permission is granted
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(`${userType} ${data.uniqueId} joined`, {
-        body: `${data.uniqueId} has joined the stream`,
-        icon: '/favicon.ico'
+      new Notification(`${userType} ${data.nickname} joined`, {
+        body: `${data.nickname} has joined the stream`
       });
     }
   }
+  
+  // Function to check if a message matches the current mazic prefix and add it to the list
+  const processMessageWithCurrentPrefix = (data) => {
+    const savedPrefix = localStorage.getItem('mazicPrefix');
+      if (savedPrefix) {
+        setMazicPrefix(savedPrefix);
+      } else {
+        setMazicPrefix('mazic:');
+      }
+    console.log("Got the prefix :"+savedPrefix);
+    if (data.comment.toLowerCase().startsWith(savedPrefix.toLowerCase())) {
+      console.log("Found the prefix");
+      console.log("Got the comment :"+data.comment);
+      const restOfComment = data.nickname + ": " + data.comment.slice(savedPrefix.length);
+      setMazicList(prevList => [...prevList, restOfComment]);
+    }
+  };
+  
+  // Function to clear the mazic list
+  const clearMazicList = () => {
+    setMazicList([]);
+  }
+  
+  // Function to remove a single message from the mazic list
+  const removeFromMazicList = (index) => {
+    setMazicList(prevList => {
+      const newList = [...prevList];
+      newList.splice(index, 1);
+      return newList;
+    });
+  }
+  
+  // Update mazicPrefix and save to localStorage
+  const updateMazicPrefix = (newPrefix) => {
+    setMazicPrefix(newPrefix);
+    localStorage.setItem('mazicPrefix', newPrefix);
+    
+    // Reprocess all existing messages with the new prefix
+    setMazicList([]); // Clear existing list
+    
+    // Apply new prefix to all stored messages
+    const newMazicMessages = [];
+    
+    allChatMessages.forEach(msg => {
+      if (msg.comment && msg.comment.toLowerCase().startsWith(newPrefix.toLowerCase())) {
+        const restOfComment = msg.nickname + ": " + msg.comment.slice(newPrefix.length);
+        newMazicMessages.push(restOfComment);
+      }
+    });
+    
+    // Update the mazic list with all matching messages
+    setMazicList(newMazicMessages);
+    
+    // Display a console log that future messages will be filtered with this prefix
+    console.log(`Filtering messages with new prefix: "${newPrefix}"`);
+    
+    // Try to save to API if that functionality is added later
+    
+  };
   
   return (
     <div className={`app-container ${darkTheme ? 'dark-theme' : 'light-theme'}`}>
@@ -866,6 +972,16 @@ function App() {
             {showModeration && (
               <ModerationStats moderationStats={moderationStats} />
             )}
+            
+            <TopLikers likers={likes} />
+            
+            <MazicList 
+              mazicList={mazicList} 
+              clearMazicList={clearMazicList} 
+              removeFromMazicList={removeFromMazicList}
+              mazicPrefix={mazicPrefix}
+              setMazicPrefix={updateMazicPrefix}
+            />
           </div>
         </div>
       )}

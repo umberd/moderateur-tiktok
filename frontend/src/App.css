@@ -754,12 +754,223 @@
 .category-stat {
   display: flex;
   justify-content: space-between;
-  padding: 0.25rem;
-  background-color: rgba(255, 255, 255, 0.05);
+  padding: 0.25rem 0.5rem;
   border-radius: var(--border-radius);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Mobile responsiveness */
+/* MazicList Component */
+.mazic-container {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.mazic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mazic-title-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.mazic-header h4 {
+  margin: 0;
+  color: var(--text-color);
+}
+
+.mazic-prefix-display {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.mazic-current-prefix {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.mazic-current-prefix:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mazic-prefix-label {
+  color: var(--secondary-text-color);
+  font-weight: 500;
+}
+
+.mazic-prefix-value {
+  color: var(--primary-color);
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.mazic-edit-icon {
+  color: var(--secondary-text-color);
+  font-size: 0.75rem;
+}
+
+.mazic-prefix-editor {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.mazic-prefix-input {
+  font-size: 0.85rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  width: 120px;
+}
+
+.mazic-save-btn {
+  background: transparent;
+  border: none;
+  color: var(--secondary-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.mazic-save-btn:hover {
+  background-color: rgba(37, 244, 238, 0.1);
+}
+
+.mazic-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mazic-count {
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  height: 24px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.mazic-clear-btn {
+  background: transparent;
+  border: none;
+  color: var(--secondary-text-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.mazic-clear-btn:hover {
+  color: var(--danger-color);
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.mazic-list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.mazic-empty {
+  text-align: center;
+  color: var(--secondary-text-color);
+  font-style: italic;
+  padding: 1rem;
+}
+
+.mazic-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mazic-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  word-break: break-word;
+  text-align: left;
+}
+
+.mazic-item-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.mazic-message-text {
+  flex: 1;
+  word-break: break-word;
+}
+
+.mazic-item-actions {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.mazic-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--secondary-text-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.mazic-copy-btn:hover {
+  color: var(--secondary-color);
+  background-color: rgba(37, 244, 238, 0.1);
+}
+
+.mazic-delete-btn:hover {
+  color: var(--danger-color);
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.mazic-item:last-child {
+  border-bottom: none;
+}
+
+/* Media queries */
 @media (max-width: 768px) {
   .content-container {
     flex-direction: column;
@@ -771,7 +982,7 @@
   }
   
   .chat-container, .gifts-container {
-    height: 300px;
+    height: 600px;
   }
 }
 
@@ -966,4 +1177,41 @@
 .dark-theme .card-header {
   background-color: var(--dark-header-bg);
   border-color: var(--dark-border);
+}
+
+/* TopLikers component */
+.top-likers-container {
+  margin-bottom: 20px;
+}
+
+.top-likers-container .card {
+  border-radius: var(--border-radius);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0;
+}
+
+.top-likers-container .card-header {
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 15px;
+}
+
+.top-likers-container .list-group-item {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  transition: background-color 0.2s ease;
+}
+
+.top-likers-container .list-group-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark-theme .top-likers-container .list-group-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.top-likers-container .badge {
+  font-size: 0.85rem;
 }

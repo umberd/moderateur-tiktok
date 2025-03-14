@@ -5,7 +5,7 @@ const GiftsContainer = ({ gifts }) => {
       {gifts.map((gift, index) => (
         <div key={`gift-${index}`} className="gift-item">
           <p>
-            <span className="username">{gift.uniqueId}</span> sent {gift.repeatCount}x {gift.giftName}
+            <span className="username">{gift.nickname}</span> sent {gift.repeatCount}x {gift.giftName}
             {gift.diamondCount > 0 && <span className="diamond-count"> ({gift.diamondCount} 💎)</span>}
           </p>
         </div>

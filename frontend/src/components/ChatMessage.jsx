@@ -8,33 +8,32 @@ const ChatMessage = ({
   let messageContent;
   let messageClass = 'chat-message';
   
+  // Determine username class based on user status - moved outside message type conditional
+  let usernameClass = "username";
+  if (message.userStatus) {
+    if (message.userStatus.isFriend) usernameClass += " friend-username";
+    else if (message.userStatus.isUndesirable) usernameClass += " undesirable-username";
+    else usernameClass += " regular-username";
+  } else {
+    usernameClass += " regular-username";
+  }
+  
   if (message.type === 'join') {
     messageContent = (
       <div className="message-content join-content">
         <img className="miniprofilepicture" src={message.profilePictureUrl} alt="" />
-        <span className="join-text">{message.nickname} joined the room</span>
+        <span className={`join-text ${usernameClass}`}>{message.nickname} joined the room</span>
       </div>
     );
     messageClass += ' join-message';
   } else if (message.type === 'follow') {
     messageContent = (
       <div className="message-content follow-content">
-        <span className="follow-text">{message.nickname} followed the host</span>
+        <span className={`follow-text ${usernameClass}`}>{message.nickname} followed the host</span>
       </div>
     );
     messageClass += ' follow-message';
   } else {
-    // Determine username class based on user status
-    let usernameClass = "username";
-    console.log(message)
-    if (message.userStatus) {
-      if (message.userStatus.isFriend) usernameClass += " friend-username";
-      else if (message.userStatus.isUndesirable) usernameClass += " undesirable-username";
-      else usernameClass += " regular-username";
-    } else {
-      usernameClass += " regular-username";
-    }
-    
     messageContent = (
       <>
         <div className="message-content">
@@ -105,14 +104,14 @@ const ChatMessage = ({
       
       <div className="user-actions">
         <button 
-          onClick={() => addToFriendsList(message.userId, message.uniqueId)}
+          onClick={() => addToFriendsList(message.uniqueId, message.nickname)}
           className="friend-button"
           title="Add to Friends"
         >
           👍
         </button>
         <button 
-          onClick={() => addToUndesirablesList(message.userId, message.uniqueId)}
+          onClick={() => addToUndesirablesList(message.uniqueId, message.nickname)}
           className="undesirable-button"
           title="Add to Undesirables"
         >
