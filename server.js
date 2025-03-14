@@ -439,7 +439,11 @@ setInterval(() => {
 }, 2000)
 
 // Serve frontend files - Use absolute path that works in both development and production
-const publicPath = path.join(process.resourcesPath || __dirname, 'public');
+//const publicPath = path.join(process.resourcesPath || __dirname, 'public');
+
+const publicPath = path.join( __dirname, 'public');
+console.log(publicPath);
+
 app.use(express.static(publicPath));
 console.log('Serving static files from:', publicPath);
 
