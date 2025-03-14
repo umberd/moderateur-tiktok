@@ -88,7 +88,7 @@ jobs:
         
     - name: Build for macOS
       if: matrix.os == 'macos-latest'
-      run: npx electron-builder --mac --universal --dir && npx electron-builder --mac --universal
+      run: npx electron-builder --mac --x64 --dir && npx electron-builder --mac --x64
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
