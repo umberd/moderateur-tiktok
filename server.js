@@ -470,7 +470,10 @@ io.on('connection', (socket) => {
 
         // Redirect message events
         tiktokConnectionWrapper.connection.on('roomUser', msg => socket.emit('roomUser', msg));
-        tiktokConnectionWrapper.connection.on('member', msg => socket.emit('member', msg));
+        tiktokConnectionWrapper.connection.on('member', msg => {
+            msg.timestamp=new Date();
+            socket.emit('member', msg)
+        });
         
         // Handle chat messages with moderation
         tiktokConnectionWrapper.connection.on('chat', async (msg) => {

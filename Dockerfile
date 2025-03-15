@@ -16,6 +16,12 @@ RUN npm install
 # Bundle app source
 COPY . .
 
+WORKDIR /app/frontend
+RUN npm install
+RUN npm run build
+
+WORKDIR /app
+
 # Expose the port the app runs on
 EXPOSE 8081
 

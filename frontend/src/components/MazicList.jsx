@@ -50,22 +50,25 @@ const MazicList = ({
   const handlePrefixChange = (e) => {
     const newValue = e.target.value;
     
-    // Update mazicPrefix in real-time if the prefix is not empty
-    if (newValue.trim() !== '') {
-      setMazicPrefix(newValue.trim());
-    }
+    // Allow empty values during editing, update in real-time
+    setMazicPrefix(newValue);
   };
 
   // Save prefix changes
   const savePrefixChanges = () => {
     if (mazicPrefix.trim() !== '') {
+      // Ensure we trim any whitespace when saving
+      setMazicPrefix(mazicPrefix.trim());
       setPrefixSaved(true);
       // Reset the saved flag after 3 seconds
       setTimeout(() => {
         setPrefixSaved(false);
       }, 3000);
+      setIsEditingPrefix(false);
+    } else {
+      // If empty, alert the user
+      alert("Prefix cannot be empty");
     }
-    setIsEditingPrefix(false);
   };
 
   // Handle prefix input keydown

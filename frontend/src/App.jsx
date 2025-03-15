@@ -313,6 +313,8 @@ function App() {
     
     // Viewer stats
     conn.on('roomUser', (data) => {
+      console.log(data);
+      
       setViewerCount(data.viewerCount)
     })
     
@@ -790,8 +792,8 @@ function App() {
     const notification = {
       id: Date.now(),
       type: 'moderation',
-      title: `Contenu inapproprié détecté de ${data.uniqueId}`,
-      message: text,
+      title: `Contenu inapproprié détecté de ${data.nickname}`,
+      message: data.comment,
       reason: reason || 'Non spécifié',
       timestamp: new Date()
     };
@@ -801,7 +803,7 @@ function App() {
     // Remove after 5 seconds
     setTimeout(() => {
       removeNotification(notification.id);
-    }, 5000);
+    }, 15000);
   }
   
   // Function to show mention notification

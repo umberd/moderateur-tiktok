@@ -73,7 +73,7 @@ const ChatMessage = ({
             >
               {message.nickname}
             </a>
-          {message.isFriend ? <span>(friend) - joined the room</span> : <span>joined the room</span>}
+          {message.isFriend ? <span>(friend) - à rejoint le chat</span> : <span>à rejoint le chat</span>}
         </div>
         
         {/* User Actions */}
