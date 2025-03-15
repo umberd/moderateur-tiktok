@@ -115,10 +115,8 @@ function App() {
   useEffect(() => {
     // With the proxy configuration, we can connect to the same origin
     // If running from file://, use the demo backend
-    const backendUrl = location.protocol === 'file:' 
-      ? "https://tiktok-chat-reader.zerody.one/" 
-      : undefined; // Will connect to same origin, proxied to port 8081
-    connectionRef.current = new TikTokConnection(backendUrl);
+    
+    connectionRef.current = new TikTokConnection(undefined);
     
     // Set up the Ollama models listener immediately when connection is initialized
     connectionRef.current.on('ollamaModels', (models) => {

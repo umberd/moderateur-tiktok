@@ -1,6 +1,6 @@
 {
-  "name": "tiktok-moderator",
-  "productName": "TikTok Moderator",
+  "name": "tiktok-chat-moderator",
+  "productName": "TikTok Chat Moderator",
   "version": "1.0.18",
   "description": "TikTok Live Chat Moderator App with AI Response Suggestions",
   "author": {
@@ -33,7 +33,7 @@
         "to": ".env"
       }
     ],
-    "appId": "com.samlepirate.tiktok-moderator",
+    "appId": "com.samlepirate.tiktok-chat-moderator",
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
