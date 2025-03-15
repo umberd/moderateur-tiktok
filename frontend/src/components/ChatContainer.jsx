@@ -69,12 +69,7 @@ const ChatContainer = ({
               />
             ))}
             
-            {showAIResponses && isGeneratingResponse && (
-              <div className="flex items-center gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl my-2 animate-pulse">
-                <div className="h-5 w-5 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
-                <span className="text-blue-300">AI is generating a response...</span>
-              </div>
-            )}
+            
           </div>
         )}
       </div>

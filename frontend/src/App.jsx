@@ -485,6 +485,8 @@ function App() {
     // Member join
     conn.on('member', (data) => {
       const userStatus = checkUserStatus(data)
+      console.log("Got the member :"+data.nickname);
+      console.log("User status :"+userStatus);
       
       // Show notification if the user is a friend or undesirable
       if (userStatus.isFriend || userStatus.isUndesirable) {
@@ -837,11 +839,14 @@ function App() {
   
   // Function to process messages with current prefix
   const processMessageWithCurrentPrefix = (data) => {
-    const savedPrefix = localStorage.getItem('mazicPrefix');
+    let savedPrefix = localStorage.getItem('mazicPrefix');
+    
       if (savedPrefix) {
         setMazicPrefix(savedPrefix);
       } else {
         setMazicPrefix('mazic:');
+        localStorage.setItem('mazicPrefix', 'mazic:');
+        savedPrefix = 'mazic:';
       }
     console.log("Got the prefix :"+savedPrefix);
     if (data.comment.toLowerCase().startsWith(savedPrefix.toLowerCase())) {

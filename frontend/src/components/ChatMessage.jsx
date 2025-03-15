@@ -53,7 +53,11 @@ const ChatMessage = ({
   // Render different message types
   if (message.type === 'join') {
     return (
-      <div className="flex items-center justify-center py-2 px-4 my-1.5">
+      <div 
+        className={getMessageContainerStyles()}
+        onMouseEnter={() => setShowActions(true)}
+        onMouseLeave={() => setShowActions(false)}
+      >
         <div className="px-3 py-1.5 rounded-full bg-gray-800/40 border border-gray-700/30 text-sm text-gray-300 flex items-center">
           <img 
             className="w-5 h-5 rounded-full mr-2 object-cover" 
@@ -62,7 +66,31 @@ const ChatMessage = ({
             onError={(e) => { e.target.src = 'https://placehold.co/20x20?text=?' }}
           />
           <span className={`font-medium ${textColor} mr-1`}>{message.nickname}</span>
-          <span>joined the room</span>
+          {message.isFriend ? <span>(friend) - joined the room</span> : <span>joined the room</span>}
+        </div>
+        
+        {/* User Actions */}
+        <div className={`absolute -right-1 -top-1 transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="flex bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden">
+            <button 
+              onClick={() => addToFriendsList(message.uniqueId, message.nickname)}
+              className="p-1.5 text-xs hover:bg-emerald-500/20 transition-colors focus:outline-none"
+              title="Add to friends"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <button 
+              onClick={() => addToUndesirablesList(message.uniqueId, message.nickname)}
+              className="p-1.5 text-xs hover:bg-rose-500/20 transition-colors focus:outline-none"
+              title="Add to undesirables"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-rose-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     )

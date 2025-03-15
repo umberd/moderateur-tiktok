@@ -379,6 +379,7 @@ async function generateResponseWithOpenAI(text, apiKey = null) {
 
 // Main function to generate a response using the selected provider
 async function generateResponse(text, provider = 'openai', model = null, apiKey = null) {
+    
     if (provider === 'ollama' && model) {
         return generateResponseWithOllama(text, model);
     } else {
@@ -529,7 +530,7 @@ io.on('connection', (socket) => {
             // Generate a suggested response using the selected provider and model
             try {
                 //console.log(msg);
-                if (socket.showResponses) {
+                if (socket.showResponses && msg.comment.startsWith("Bot")) {
                     //console.log('Generating response');
                     let theMessage=msg.nickname + ' à dit : "' + msg.comment + '"';
                     // if msg comment start with @[username] make nickname à écrit à [username] : comment
