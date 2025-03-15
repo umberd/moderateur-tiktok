@@ -895,7 +895,7 @@ function App() {
   };
   
   return (
-    <div className={`app-container ${darkTheme ? 'dark-theme' : 'light-theme'}`}>
+    <div className={`min-h-screen w-full bg-gray-950 text-white ${darkTheme ? 'dark' : 'light'}`}>
       <Notifications 
         notifications={notifications} 
         removeNotification={removeNotification} 
@@ -904,10 +904,13 @@ function App() {
       {/* Toggle button for user lists */}
       <button 
         id="toggleUserLists" 
-        className="btn btn-primary position-fixed top-0 end-0 m-3"
+        className="fixed top-4 right-4 z-50 flex items-center bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg shadow-lg transition-colors"
         onClick={toggleUserLists}
       >
-        <i className="bi bi-people-fill me-2"></i>Gérer les listes d'utilisateurs
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+        </svg>
+        Gérer les listes
       </button>
       
       {/* User Lists Panel */}
@@ -922,100 +925,115 @@ function App() {
         toggleUserLists={toggleUserLists}
       />
       
-      <header className="app-header">
-        <h1>TikTok LIVE Chat Reader</h1>
-        
-        {!isConnected ? (
-          <div className="connection-form">
-            <ConnectionForm 
-              username={username}
-              setUsername={setUsername}
-              connect={connect}
-              isConnecting={isConnecting}
-              error={error}
-            />
-            
-            <Settings 
-              darkTheme={darkTheme}
-              setDarkTheme={handleThemeChange}
-              showModeration={showModeration}
-              setShowModeration={setShowModeration}
-              showAIResponses={showAIResponses}
-              setShowAIResponses={setShowAIResponses}
-              enableSoundNotifications={enableSoundNotifications}
-              setEnableSoundNotifications={setEnableSoundNotifications}
-              enableFlvStream={enableFlvStream}
-              setEnableFlvStream={setEnableFlvStream}
-              enableMentionNotifications={enableMentionNotifications}
-              setEnableMentionNotifications={setEnableMentionNotifications}
-              yourUsername={yourUsername}
-              setYourUsername={setYourUsername}
-              aiProvider={aiProvider}
-              setAiProvider={setAiProvider}
-              aiModel={aiModel}
-              setAiModel={setAiModel}
-              openaiApiKey={openaiApiKey}
-              setOpenaiApiKey={setOpenaiApiKey}
-              availableOllamaModels={availableOllamaModels}
-              setAvailableOllamaModels={setAvailableOllamaModels}
-            />
-          </div>
-        ) : (
-          <div className="connected-header">
-            <h2>Connecté à : {username}</h2>
-            <StatsBar 
-              viewerCount={viewerCount}
-              likeCount={likeCount}
-              diamondsCount={diamondsCount}
-            />
-            <button onClick={disconnect} className="disconnect-button">
-              Déconnecter
-            </button>
-          </div>
-        )}
+      <header className="py-4 px-6 bg-gray-900 border-b border-gray-800">
+        <div className="container mx-auto">
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 text-center">TikTok LIVE Chat Reader</h1>
+          
+          {!isConnected ? (
+            <div className="max-w-2xl mx-auto">
+              <ConnectionForm 
+                username={username}
+                setUsername={setUsername}
+                connect={connect}
+                isConnecting={isConnecting}
+                error={error}
+              />
+              
+              <Settings 
+                darkTheme={darkTheme}
+                setDarkTheme={handleThemeChange}
+                showModeration={showModeration}
+                setShowModeration={setShowModeration}
+                showAIResponses={showAIResponses}
+                setShowAIResponses={setShowAIResponses}
+                enableSoundNotifications={enableSoundNotifications}
+                setEnableSoundNotifications={setEnableSoundNotifications}
+                enableFlvStream={enableFlvStream}
+                setEnableFlvStream={setEnableFlvStream}
+                enableMentionNotifications={enableMentionNotifications}
+                setEnableMentionNotifications={setEnableMentionNotifications}
+                yourUsername={yourUsername}
+                setYourUsername={setYourUsername}
+                aiProvider={aiProvider}
+                setAiProvider={setAiProvider}
+                aiModel={aiModel}
+                setAiModel={setAiModel}
+                openaiApiKey={openaiApiKey}
+                setOpenaiApiKey={setOpenaiApiKey}
+                availableOllamaModels={availableOllamaModels}
+                setAvailableOllamaModels={setAvailableOllamaModels}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <h2 className="text-xl font-semibold text-white flex items-center">
+                <span className="mr-2">Connecté à:</span>
+                <span className="bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-full">
+                  @{username}
+                </span>
+              </h2>
+              <StatsBar 
+                viewerCount={viewerCount}
+                likeCount={likeCount}
+                diamondsCount={diamondsCount}
+              />
+              <button 
+                onClick={disconnect} 
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow transition-colors"
+              >
+                Déconnecter
+              </button>
+            </div>
+          )}
+        </div>
       </header>
       
       {isConnected && (
-        <div className="content-container">
-          <div className="main-content">
-            <VideoPlayer 
-              username={username}
-              enableFlvStream={enableFlvStream}
-              connectionRef={connectionRef}
-            />
-            
-            <div className="chat-gifts-container">
-              <ChatContainer 
-                chatMessages={chatMessages}
-                showModeration={showModeration}
-                showAIResponses={showAIResponses}
-                addToFriendsList={addToFriendsList}
-                addToUndesirablesList={addToUndesirablesList}
-                autoScroll={autoScroll}
-                setAutoScroll={setAutoScroll}
-                isGeneratingResponse={isGeneratingResponse}
+        <main className="container mx-auto px-4 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-3 space-y-6">
+              <VideoPlayer 
+                username={username}
+                enableFlvStream={enableFlvStream}
+                connectionRef={connectionRef}
               />
               
-              <GiftsContainer gifts={gifts} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <ChatContainer 
+                    chatMessages={chatMessages}
+                    showModeration={showModeration}
+                    showAIResponses={showAIResponses}
+                    addToFriendsList={addToFriendsList}
+                    addToUndesirablesList={addToUndesirablesList}
+                    autoScroll={autoScroll}
+                    setAutoScroll={setAutoScroll}
+                    isGeneratingResponse={isGeneratingResponse}
+                  />
+                </div>
+                <div className="lg:col-span-1">
+                  <GiftsContainer gifts={gifts} />
+                </div>
+              </div>
+            </div>
+            
+            <div className="lg:col-span-1 space-y-6">
+              {showModeration && (
+                <ModerationStats moderationStats={moderationStats} />
+              )}
+              
+              <TopLikers likers={likes} />
+              
+              <MazicList 
+                mazicList={mazicList} 
+                clearMazicList={clearMazicList} 
+                removeFromMazicList={removeFromMazicList}
+                mazicPrefix={mazicPrefix}
+                setMazicPrefix={updateMazicPrefix}
+              />
             </div>
           </div>
-          
-          <div className="side-panel">
-            {showModeration && (
-              <ModerationStats moderationStats={moderationStats} />
-            )}
-            
-            <TopLikers likers={likes} />
-            
-            <MazicList 
-              mazicList={mazicList} 
-              clearMazicList={clearMazicList} 
-              removeFromMazicList={removeFromMazicList}
-              mazicPrefix={mazicPrefix}
-              setMazicPrefix={updateMazicPrefix}
-            />
-          </div>
-        </div>
+        </main>
       )}
     </div>
   )

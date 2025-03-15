@@ -69,165 +69,144 @@ const MazicList = ({
   const handlePrefixKeyDown = (e) => {
     if (e.key === 'Enter') {
       savePrefixChanges();
-    } else if (e.key === 'Escape') {
-      setIsEditingPrefix(false);
     }
   };
-  
+
   return (
-    <div className="flex flex-col h-full rounded-2xl overflow-hidden border border-gray-800 bg-gray-900/70 backdrop-blur-sm shadow-xl">
-      <div className="px-4 py-3 bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-            </svg>
-            <h3 className="text-lg font-bold text-white">Filtered Messages</h3>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-              {mazicList.length} messages
-            </span>
-            {mazicList.length > 0 && (
-              <button 
-                className="p-1.5 rounded-lg bg-gray-800 hover:bg-rose-500/20 text-gray-400 hover:text-rose-400 transition-colors border border-gray-700 hover:border-rose-500/30 focus:outline-none"
-                onClick={clearMazicList}
-                title="Clear all filtered messages"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </button>
-            )}
-          </div>
+    <div className="rounded-2xl border border-gray-800 bg-gray-900/70 backdrop-blur-sm shadow-xl overflow-hidden">
+      <div className="px-4 py-3 bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700 flex items-center justify-between">
+        <div className="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+          <h3 className="text-lg font-bold text-white">Mazic List</h3>
         </div>
         
-        <div className="mt-3">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+            {mazicList.length} items
+          </span>
+          
+          {mazicList.length > 0 && (
+            <button 
+              onClick={clearMazicList}
+              className="p-1 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-colors"
+              aria-label="Clear all items"
+              title="Clear all items"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+      
+      <div className="p-4 border-b border-gray-700 bg-gray-800/50">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-300">Current Prefix:</span>
+            {prefixSaved && (
+              <span className="text-xs text-green-400 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Saved!
+              </span>
+            )}
+          </div>
+          
           {isEditingPrefix ? (
-            <div className="flex items-center bg-gray-800/80 rounded-lg border border-indigo-500/30 focus-within:ring-2 focus-within:ring-indigo-500/40 focus-within:border-transparent p-0.5">
-              <input
-                type="text"
+            <div className="flex items-center gap-2">
+              <input 
+                type="text" 
                 value={mazicPrefix}
                 onChange={handlePrefixChange}
-                onBlur={savePrefixChanges}
                 onKeyDown={handlePrefixKeyDown}
+                placeholder="Enter prefix..."
+                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 autoFocus
-                className="flex-1 bg-transparent text-white px-2 py-1.5 text-sm focus:outline-none placeholder-gray-500"
-                placeholder="Enter filter prefix..."
               />
-              <button
+              <button 
                 onClick={savePrefixChanges}
-                className="p-1.5 text-indigo-400 hover:text-indigo-300 focus:outline-none"
-                title="Save prefix"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
+                Save
               </button>
             </div>
           ) : (
-            <div 
-              onClick={handlePrefixEdit}
-              className="flex items-center gap-2 px-3 py-2 bg-gray-800/60 rounded-lg border border-gray-700/60 hover:border-indigo-500/30 transition-colors cursor-pointer text-sm group"
-            >
-              <span className="text-gray-400">Prefix:</span>
-              <span className="font-medium text-indigo-400">{mazicPrefix}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-500 group-hover:text-indigo-400 ml-auto transition-colors" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-              </svg>
-            </div>
-          )}
-          
-          {prefixSaved && (
-            <div className="mt-2 animate-fade-in-down px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-sm text-indigo-300">
-              <span>New messages starting with "{mazicPrefix}" will be added here</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center bg-gray-700/70 border border-gray-600 rounded-lg px-3 py-2">
+                <code className="text-indigo-300 text-sm font-mono">{mazicPrefix}</code>
+              </div>
+              <button 
+                onClick={handlePrefixEdit}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+              >
+                Edit
+              </button>
             </div>
           )}
         </div>
       </div>
       
-      <div className="flex-1 p-3 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900"
+      <div className="max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900"
         style={{ 
           scrollbarWidth: 'thin',
           scrollbarColor: '#4B5563 #111827'
         }}
       >
         {mazicList.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+          <div className="flex flex-col items-center justify-center p-8 text-gray-500">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-2 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            <p>No filtered messages yet</p>
+            <p>No mazic items yet</p>
             <p className="text-xs mt-1">Messages starting with "{mazicPrefix}" will appear here</p>
           </div>
         ) : (
-          <ul className="space-y-2">
+          <div className="divide-y divide-gray-800">
             {mazicList.map((message, index) => (
-              <li 
-                key={index} 
-                className="relative p-3 bg-gray-800/50 hover:bg-gray-800/70 border border-gray-700/50 rounded-lg transition-all group"
-              >
-                <div className="pr-16">
-                  <p className="text-white/90 break-words">{message}</p>
-                </div>
-                <div className="absolute top-2 right-2 flex gap-1">
-                  <button 
-                    className={`p-1.5 rounded-md transition-colors focus:outline-none ${
-                      copiedIndex === index 
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                        : 'bg-gray-700/70 text-gray-400 hover:text-indigo-400 border border-gray-600/50 hover:bg-indigo-500/20 hover:border-indigo-500/30'
-                    }`}
-                    onClick={() => copyToClipboard(message.includes(": ") ? message.split(": ")[1] : message, index)}
-                    title="Copy to clipboard"
-                  >
-                    {copiedIndex === index ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              <div key={index} className="p-3 hover:bg-gray-800/50 transition-colors group">
+                <div className="flex justify-between items-start gap-2">
+                  <p className="text-sm text-white">{message}</p>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => copyToClipboard(message, index)}
+                      className="p-1 rounded bg-gray-700 hover:bg-indigo-600 text-gray-300 hover:text-white transition-colors"
+                      aria-label="Copy to clipboard"
+                      title="Copy to clipboard"
+                    >
+                      {copiedIndex === index ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                          <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => removeFromMazicList(index)}
+                      className="p-1 rounded bg-gray-700 hover:bg-rose-600 text-gray-300 hover:text-white transition-colors"
+                      aria-label="Remove item"
+                      title="Remove item"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-                        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
-                      </svg>
-                    )}
-                  </button>
-                  <button 
-                    className="p-1.5 rounded-md bg-gray-700/70 text-gray-400 hover:text-rose-400 border border-gray-600/50 hover:bg-rose-500/20 hover:border-rose-500/30 transition-colors focus:outline-none"
-                    onClick={() => removeFromMazicList(index)}
-                    title="Remove message"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
+                    </button>
+                  </div>
                 </div>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </div>
   );
 };
-
-// Add a fade-in-down animation for the saved prefix notification
-const styles = document.createElement('style');
-styles.innerHTML = `
-  @keyframes fade-in-down {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .animate-fade-in-down {
-    animation: fade-in-down 0.3s ease-out forwards;
-  }
-`;
-document.head.appendChild(styles);
 
 export default MazicList; 

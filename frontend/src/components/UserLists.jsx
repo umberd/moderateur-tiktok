@@ -122,7 +122,7 @@ const UserLists = ({
         </div>
         
         <div className="card-body">
-          <ul className="nav nav-tabs mb-3" role="tablist">
+          <ul className="nav nav-tabs mb-3 d-flex flex-nowrap" role="tablist">
             <li className="nav-item" role="presentation">
               <button 
                 className={`nav-link ${activeTab === 'friends' ? 'active' : ''}`} 
@@ -148,15 +148,6 @@ const UserLists = ({
                 role="tab"
               >
                 Recherche
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button 
-                className={`nav-link ${activeTab === 'quickRemove' ? 'active' : ''}`} 
-                onClick={() => setActiveTab('quickRemove')}
-                role="tab"
-              >
-                Suppression rapide
               </button>
             </li>
           </ul>

@@ -21,7 +21,7 @@ const ChatContainer = ({
   }, [chatMessages, autoScroll])
   
   return (
-    <div className="flex flex-col h-full rounded-2xl overflow-hidden border border-gray-800 bg-gray-900/70 backdrop-blur-sm shadow-xl">
+    <div className="flex flex-col h-[600px] lg:h-[700px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900/70 backdrop-blur-sm shadow-xl">
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700">
         <h3 className="text-lg font-bold text-white flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
@@ -57,22 +57,24 @@ const ChatContainer = ({
             <p className="text-xs mt-1">Messages will appear here when users chat</p>
           </div>
         ) : (
-          chatMessages.map((msg, index) => (
-            <ChatMessage 
-              key={`msg-${index}-${msg.msgId || index}`}
-              message={msg}
-              showModeration={showModeration}
-              showAIResponses={showAIResponses}
-              addToFriendsList={addToFriendsList}
-              addToUndesirablesList={addToUndesirablesList}
-            />
-          ))
-        )}
-        
-        {showAIResponses && isGeneratingResponse && (
-          <div className="flex items-center gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl my-2 animate-pulse">
-            <div className="h-5 w-5 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
-            <span className="text-blue-300">AI is generating a response...</span>
+          <div className="space-y-2">
+            {chatMessages.map((msg, index) => (
+              <ChatMessage 
+                key={`msg-${index}-${msg.msgId || index}`}
+                message={msg}
+                showModeration={showModeration}
+                showAIResponses={showAIResponses}
+                addToFriendsList={addToFriendsList}
+                addToUndesirablesList={addToUndesirablesList}
+              />
+            ))}
+            
+            {showAIResponses && isGeneratingResponse && (
+              <div className="flex items-center gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl my-2 animate-pulse">
+                <div className="h-5 w-5 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
+                <span className="text-blue-300">AI is generating a response...</span>
+              </div>
+            )}
           </div>
         )}
       </div>
