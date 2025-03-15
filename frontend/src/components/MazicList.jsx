@@ -5,7 +5,7 @@ import React, { useState } from 'react';
  * 
  * Displays a list of mazic messages that start with a configurable prefix in chat
  * 
- * @param {Array} mazicList - Array of mazic messages
+ * @param {Array} mazicList - Array of mazic messages with user status
  * @param {Function} clearMazicList - Function to clear the mazic list
  * @param {Function} removeFromMazicList - Function to remove a single message from the list
  * @param {String} mazicPrefix - The prefix used to identify mazic messages
@@ -23,8 +23,11 @@ const MazicList = ({
   const [prefixSaved, setPrefixSaved] = useState(false);
   
   // Function to copy text to clipboard
-  const copyToClipboard = (text, index) => {
-    navigator.clipboard.writeText(text)
+  const copyToClipboard = (message, index) => {
+    // Copy just the text content, not the object
+    let textToCopy = typeof message === 'object' ? message.text : message;
+    textToCopy=textToCopy.split(':')[1].trim();
+    navigator.clipboard.writeText(textToCopy)
       .then(() => {
         // Show copied feedback
         setCopiedIndex(index);
@@ -70,6 +73,27 @@ const MazicList = ({
     if (e.key === 'Enter') {
       savePrefixChanges();
     }
+  };
+
+  // Helper function to get message container styles based on user status
+  const getMessageStyles = (userStatus) => {
+    if (!userStatus) return "text-sm text-white";
+    
+    if (userStatus.isFriend) {
+      return "text-sm text-emerald-400 font-medium";
+    } else if (userStatus.isUndesirable) {
+      return "text-sm text-rose-400 font-medium";
+    } else {
+      return "text-sm text-white";
+    }
+  };
+
+  // Get message content from different possible formats
+  const getMessageText = (message) => {
+    if (typeof message === 'object' && message.text) {
+      return message.text;
+    }
+    return message;
   };
 
   return (
@@ -166,42 +190,58 @@ const MazicList = ({
           </div>
         ) : (
           <div className="divide-y divide-gray-800">
-            {mazicList.map((message, index) => (
-              <div key={index} className="p-3 hover:bg-gray-800/50 transition-colors group">
-                <div className="flex justify-between items-start gap-2">
-                  <p className="text-sm text-white">{message}</p>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={() => copyToClipboard(message, index)}
-                      className="p-1 rounded bg-gray-700 hover:bg-indigo-600 text-gray-300 hover:text-white transition-colors"
-                      aria-label="Copy to clipboard"
-                      title="Copy to clipboard"
-                    >
-                      {copiedIndex === index ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                          <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
+            {mazicList.map((message, index) => {
+              // Get styles based on user status (if available)
+              const userStatus = message?.userStatus || null;
+              console.log("User status MazicList:"+JSON.stringify(userStatus));
+              const messageStyles = getMessageStyles(userStatus);
+              const messageText = getMessageText(message);
+              
+              // Determine container styles based on user status
+              let containerStyles = "p-3 hover:bg-gray-800/50 transition-colors group";
+              if (userStatus?.isFriend) {
+                containerStyles += " bg-emerald-500/10 border-emerald-500/20";
+              } else if (userStatus?.isUndesirable) {
+                containerStyles += " bg-rose-500/10 border-rose-500/20";
+              }
+              
+              return (
+                <div key={index} className={containerStyles}>
+                  <div className="flex justify-between items-start gap-2">
+                    <p className={messageStyles}>{messageText}</p>
+                    <div className="flex items-center gap-1 opacity-1 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => copyToClipboard(message, index)}
+                        className="p-1 rounded bg-gray-700 hover:bg-indigo-600 text-gray-300 hover:text-white transition-colors"
+                        aria-label="Copy to clipboard"
+                        title="Copy to clipboard"
+                      >
+                        {copiedIndex === index ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                            <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                          </svg>
+                        )}
+                      </button>
+                      <button 
+                        onClick={() => removeFromMazicList(index)}
+                        className="p-1 rounded bg-gray-700 hover:bg-rose-600 text-gray-300 hover:text-white transition-colors"
+                        aria-label="Remove item"
+                        title="Remove item"
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                      )}
-                    </button>
-                    <button 
-                      onClick={() => removeFromMazicList(index)}
-                      className="p-1 rounded bg-gray-700 hover:bg-rose-600 text-gray-300 hover:text-white transition-colors"
-                      aria-label="Remove item"
-                      title="Remove item"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

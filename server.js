@@ -616,6 +616,8 @@ app.use(express.json());
 app.get('/api/users/friends', async (req, res) => {
     try {
         const friends = await db.getAllFriends();
+        console.log("Friends :"+friends.map(friend=>friend.nickname).join(', '));
+        
         res.json(friends);
     } catch (error) {
         console.error('Error fetching friends:', error);
@@ -626,6 +628,7 @@ app.get('/api/users/friends', async (req, res) => {
 app.get('/api/users/undesirables', async (req, res) => {
     try {
         const undesirables = await db.getAllUndesirables();
+        console.log("Undesirables :"+undesirables.map(undesirable=>undesirable.nickname).join(', '));
         res.json(undesirables);
     } catch (error) {
         console.error('Error fetching undesirables:', error);

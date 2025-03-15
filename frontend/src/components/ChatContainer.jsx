@@ -60,7 +60,7 @@ const ChatContainer = ({
           <div className="space-y-2">
             {chatMessages.map((msg, index) => (
               <ChatMessage 
-                key={`msg-${index}-${msg.msgId || index}`}
+                key={`msg-${index}-${ index}`}
                 message={msg}
                 showModeration={showModeration}
                 showAIResponses={showAIResponses}

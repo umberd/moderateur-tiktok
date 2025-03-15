@@ -65,7 +65,14 @@ const ChatMessage = ({
             alt="" 
             onError={(e) => { e.target.src = 'https://placehold.co/20x20?text=?' }}
           />
-          <span className={`font-medium ${textColor} mr-1`}>{message.nickname}</span>
+          <a 
+              href={`https://www.tiktok.com/@${message.uniqueId}`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`font-bold ${textColor} hover:underline transition-colors mr-2`}
+            >
+              {message.nickname}
+            </a>
           {message.isFriend ? <span>(friend) - joined the room</span> : <span>joined the room</span>}
         </div>
         
@@ -138,7 +145,8 @@ const ChatMessage = ({
             <span className="text-xs text-gray-500">{formatTimestamp(message.timestamp)}</span>
           </div>
           
-          <p className="text-white/90 break-words mt-1">{message.comment}</p>
+          <p className="text-white/90 bg-black/50 p-2 rounded-lg break-words mt-1">{message.comment}</p>
+        
           
           {/* Moderation Results */}
           {showModeration && message.moderation && (
