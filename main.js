@@ -9,7 +9,9 @@ function createWindow () {
     width: 800,
     height: 600
   });
-  win.loadURL('http://localhost:8081'); 
+  win.maximize();
+  win.loadURL('http://localhost:8081');
+  
 }
 
 app.whenReady().then(() => {
@@ -20,5 +22,5 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  app.quit();
 });
