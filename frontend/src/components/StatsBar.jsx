@@ -1,60 +1,32 @@
 const StatsBar = ({ viewerCount, likeCount, diamondsCount }) => {
-  const statStyles = {
-    container: {
-      display: 'flex',
-      justifyContent: 'space-around',
-      padding: '12px',
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      backdropFilter: 'blur(5px)',
-      borderRadius: '12px',
-      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-      margin: '10px 0'
-    },
-    stat: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: '6px'
-    },
-    iconContainer: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      width: '50px',
-      height: '50px',
-      borderRadius: '50%',
-      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-      transition: 'transform 0.2s, box-shadow 0.2s'
-    },
-    icon: {
-      fontSize: '1.8rem'
-    },
-    value: {
-      fontSize: '1rem',
-      fontWeight: 'bold'
-    }
-  };
-
   return (
-    <div style={statStyles.container} className="stats-container">
-      <div style={statStyles.stat} className="stat">
-        <div style={statStyles.iconContainer}>
-          <span style={statStyles.icon}>👁️</span>
+    <div className="flex justify-around p-4 my-3 bg-gradient-to-r from-gray-800/80 to-gray-900/80 backdrop-blur-md rounded-2xl shadow-lg border border-gray-700/30">
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex justify-center items-center w-14 h-14 rounded-full bg-pink-500/20 border border-pink-500/30 shadow-md shadow-pink-500/10 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-pink-500/20 group">
+          <span className="text-3xl group-hover:-rotate-12 transition-transform duration-300">👁️</span>
         </div>
-        <span style={statStyles.value}>{viewerCount}</span>
+        <div className="flex flex-col items-center">
+          <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">Viewers</span>
+          <span className="text-xl font-bold text-white">{viewerCount.toLocaleString()}</span>
+        </div>
       </div>
-      <div style={statStyles.stat} className="stat">
-        <div style={statStyles.iconContainer}>
-          <span style={statStyles.icon}>❤️</span>
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex justify-center items-center w-14 h-14 rounded-full bg-red-500/20 border border-red-500/30 shadow-md shadow-red-500/10 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-red-500/20 group">
+          <span className="text-3xl group-hover:scale-125 transition-transform duration-300">❤️</span>
         </div>
-        <span style={statStyles.value}>{likeCount}</span>
+        <div className="flex flex-col items-center">
+          <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">Likes</span>
+          <span className="text-xl font-bold text-white">{likeCount.toLocaleString()}</span>
+        </div>
       </div>
-      <div style={statStyles.stat} className="stat">
-        <div style={statStyles.iconContainer}>
-          <span style={statStyles.icon}>💎</span>
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex justify-center items-center w-14 h-14 rounded-full bg-blue-500/20 border border-blue-500/30 shadow-md shadow-blue-500/10 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/20 group">
+          <span className="text-3xl group-hover:rotate-12 transition-transform duration-300">💎</span>
         </div>
-        <span style={statStyles.value}>{diamondsCount}</span>
+        <div className="flex flex-col items-center">
+          <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">Diamonds</span>
+          <span className="text-xl font-bold text-white">{diamondsCount.toLocaleString()}</span>
+        </div>
       </div>
     </div>
   )
