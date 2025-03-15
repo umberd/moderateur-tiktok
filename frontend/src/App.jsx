@@ -26,6 +26,8 @@ function App() {
   const [isConnecting, setIsConnecting] = useState(false)
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
+
+  const [availableOllamaModels, setAvailableOllamaModels] = useState([])
   
   // Counters
   const [viewerCount, setViewerCount] = useState(0)
@@ -118,23 +120,55 @@ function App() {
       : undefined; // Will connect to same origin, proxied to port 8081
     connectionRef.current = new TikTokConnection(backendUrl);
     
+    // Set up the Ollama models listener immediately when connection is initialized
+    connectionRef.current.on('ollamaModels', (models) => {
+      console.log("Available Ollama models received:");
+      console.log(models);
+      setAvailableOllamaModels(models);
+    });
+    
     // Load all settings
     const loadSettingsFromApi = async () => {
+      console.log("Loading settings from API");
       try {
         // Try to get preferences from API first
-        const preferences = null;
         
-        // Apply theme from API
-        if (preferences.darkTheme !== undefined) {
-          setDarkTheme(preferences.darkTheme);
-          applyTheme(preferences.darkTheme);
-        } else {
-          // Fallback to localStorage
-          const savedTheme = localStorage.getItem('darkTheme');
-          const isDark = savedTheme === null ? true : savedTheme === 'true';
-          setDarkTheme(isDark);
-          applyTheme(isDark);
-        }
+        
+        const loadSetting = (key, stateSetter, defaultValue = null) => {
+          const savedValue = localStorage.getItem(key);
+          if (savedValue !== null) {
+            try {
+              if (typeof defaultValue === 'boolean') {
+                // Handle boolean values
+                stateSetter(savedValue === 'true');
+              } else {
+                // Handle other values
+                stateSetter(savedValue);
+              }
+            } catch (e) {
+              console.error(`Error loading setting ${key}:`, e);
+            }
+          }
+        };
+        
+        // Load theme from localStorage
+        const savedTheme = localStorage.getItem('darkTheme');
+        const isDark = savedTheme === null ? true : savedTheme === 'true';
+        setDarkTheme(isDark);
+        applyTheme(isDark);
+        
+        // Load other settings
+        loadSetting('showModeration', setShowModeration, false);
+        loadSetting('showAIResponses', setShowAIResponses, false);
+        loadSetting('enableSoundNotifications', setEnableSoundNotifications, false);
+        loadSetting('enableMentionNotifications', setEnableMentionNotifications, true);
+        loadSetting('enableFlvStream', setEnableFlvStream, true);
+        loadSetting('tiktokUsername', setYourUsername, '');
+        loadSetting('openaiApiKey', setOpenaiApiKey, '');
+        loadSetting('aiProvider', setAiProvider, 'openai');
+        loadSetting('aiModel', setAiModel, '');
+        loadSetting('autoScroll', setAutoScroll, true);
+        loadSetting('mazicPrefix', setMazicPrefix, 'mazic:');
         
         // Apply other settings from API if available
         // ...
@@ -145,6 +179,7 @@ function App() {
         // Fallback to localStorage for all settings
         const loadSetting = (key, stateSetter, defaultValue = null) => {
           const savedValue = localStorage.getItem(key);
+          console.log("Loading setting "+key+" from localStorage: "+savedValue);
           if (savedValue !== null) {
             try {
               if (typeof defaultValue === 'boolean') {
@@ -152,6 +187,7 @@ function App() {
                 stateSetter(savedValue === 'true');
               } else {
                 // Handle other values
+                console.log("Setting "+key+" to "+savedValue);
                 stateSetter(savedValue);
               }
             } catch (e) {
@@ -420,11 +456,6 @@ function App() {
           return msg
         })
       })
-    })
-    
-    // Available Ollama models
-    conn.on('ollamaModels', () => {
-      // If you have state for available models, update it here
     })
     
     // Handle stream end
@@ -925,7 +956,8 @@ function App() {
               setAiModel={setAiModel}
               openaiApiKey={openaiApiKey}
               setOpenaiApiKey={setOpenaiApiKey}
-              requestNotificationPermission={requestNotificationPermission}
+              availableOllamaModels={availableOllamaModels}
+              setAvailableOllamaModels={setAvailableOllamaModels}
             />
           </div>
         ) : (

@@ -48,10 +48,36 @@ db.initDatabase()
 // Function to get available Ollama models
 async function getOllamaModels() {
     try {
-        const response = await axios.get(`${OLLAMA_HOST}/api/tags`);
-        return response.data.models || [];
+        console.log(`Fetching Ollama models from ${OLLAMA_HOST}/api/tags`);
+        const response = await axios.get(`${OLLAMA_HOST}/api/tags`, { 
+            timeout: 5000, // 5 second timeout
+            headers: { 'Accept': 'application/json' }
+        });
+        
+        // Log the response for debugging
+        console.log('Ollama response status:', response.status);
+        
+        if (response.data && response.data.models) {
+            // If models array exists, return it
+            console.log(`Found ${response.data.models.length} Ollama models`);
+            return response.data.models || [];
+        } else {
+            // Log the actual response shape if it's not what we expect
+            console.log('Unexpected Ollama response format:', JSON.stringify(response.data));
+            return [];
+        }
     } catch (error) {
-        console.error('Error fetching Ollama models:', error);
+        if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            console.error('Error fetching Ollama models - Response error:', error.response.status, error.response.data);
+        } else if (error.request) {
+            // The request was made but no response was received
+            console.error('Error fetching Ollama models - No response received. Is Ollama running?');
+        } else {
+            // Something happened in setting up the request that triggered an Error
+            console.error('Error fetching Ollama models:', error.message);
+        }
         return [];
     }
 }
@@ -369,9 +395,18 @@ io.on('connection', (socket) => {
 
     // Send available Ollama models to the client
     getOllamaModels().then(models => {
-        socket.emit('ollamaModels', models);
+        console.log("Available Ollama models:");
+        if (models && models.length > 0) {
+            console.log(models.map(model => model.name));
+            socket.emit('ollamaModels', models);
+        } else {
+            console.log("No Ollama models found or empty response");
+            socket.emit('ollamaModels', []);
+        }
     }).catch(error => {
-        console.error('Error sending Ollama models:', error);
+        console.error('Error fetching Ollama models:', error.message);
+        // Send an empty array if there's an error
+        socket.emit('ollamaModels', []);
     });
 
     socket.on('setUniqueId', (uniqueId, options) => {
