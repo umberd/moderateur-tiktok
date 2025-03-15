@@ -9,7 +9,7 @@ const ConnectionForm = ({
     <div className="connection-form">
       <input
         type="text"
-        placeholder="TikTok Username"
+        placeholder="Nom d'utilisateur TikTok"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         className="username-input"
@@ -19,7 +19,7 @@ const ConnectionForm = ({
         disabled={isConnecting || !username}
         className="connect-button"
       >
-        {isConnecting ? 'Connecting...' : 'Connect'}
+        {isConnecting ? 'Connexion en cours...' : 'Connecter'}
       </button>
       
       {error && <div className="error-message">{error}</div>}

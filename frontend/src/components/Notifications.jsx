@@ -32,7 +32,7 @@ const Notifications = ({ notifications, removeNotification }) => {
           </div>
           <div className="notification-message">{notification.message}</div>
           {notification.reason && (
-            <div className="notification-reason">Reason: {notification.reason}</div>
+            <div className="notification-reason">Raison : {notification.reason}</div>
           )}
         </div>
       ))}

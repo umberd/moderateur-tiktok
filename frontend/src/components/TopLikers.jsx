@@ -8,7 +8,7 @@ const TopLikers = ({ likers }) => {
     <div className="top-likers-container">
       <div className="card">
         <div className="card-header d-flex justify-content-between align-items-center">
-          <h5 className="mb-0">Top Likers</h5>
+          <h5 className="mb-0">Meilleurs fans</h5>
           <span className="badge bg-primary">
             {likers.length}
           </span>
@@ -16,7 +16,7 @@ const TopLikers = ({ likers }) => {
         <div className="card-body p-0">
           <ul className="list-group list-group-flush">
             {sortedLikers.length === 0 ? (
-              <li className="list-group-item text-center">No likes yet</li>
+              <li className="list-group-item text-center">Pas encore de likes</li>
             ) : (
               sortedLikers.slice(0, 10).map((liker, index) => (
                 <li 
@@ -30,10 +30,10 @@ const TopLikers = ({ likers }) => {
                     <span className="me-2">{index + 1}.</span>
                     <span>{liker.nickname}</span>
                     {liker.userStatus?.isFriend && (
-                      <span className="badge bg-success ms-2">Friend</span>
+                      <span className="badge bg-success ms-2">Ami</span>
                     )}
                     {liker.userStatus?.isUndesirable && (
-                      <span className="badge bg-danger ms-2">Undesirable</span>
+                      <span className="badge bg-danger ms-2">Indésirable</span>
                     )}
                   </div>
                   <span className="badge bg-primary rounded-pill">

@@ -739,9 +739,9 @@ function App() {
     const notification = {
       id: Date.now(),
       type: 'moderation',
-      title: `Inappropriate content detected from ${data.uniqueId}`,
+      title: `Contenu inapproprié détecté de ${data.uniqueId}`,
       message: text,
-      reason: reason || 'Not specified',
+      reason: reason || 'Non spécifié',
       timestamp: new Date()
     };
     
@@ -759,7 +759,7 @@ function App() {
     const notification = {
       id: Date.now(),
       type: 'mention',
-      title: `${data.uniqueId} mentioned you`,
+      title: `${data.uniqueId} vous a mentionné`,
       message: data.comment,
       timestamp: new Date()
     };
@@ -773,7 +773,7 @@ function App() {
     
     // Try to show browser notification if permission is granted
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(`${data.uniqueId} mentioned you`, {
+      new Notification(`${data.uniqueId} vous a mentionné`, {
         body: data.comment,
         icon: '/favicon.ico'
       });
@@ -801,10 +801,10 @@ function App() {
     let notificationType = '';
     
     if (userStatus.isFriend) {
-      userType = 'Friend';
+      userType = 'Ami';
       notificationType = 'friend-join';
     } else if (userStatus.isUndesirable) {
-      userType = 'Undesirable';
+      userType = 'Indésirable';
       notificationType = 'undesirable-join';
     } else {
       // Not a special user, don't show notification
@@ -815,8 +815,8 @@ function App() {
     const notification = {
       id: Date.now(),
       type: notificationType,
-      title: `${userType} ${data.nickname} joined the stream`,
-      message: `${data.nickname} has joined the stream`,
+      title: `${userType} ${data.nickname} a rejoint le stream`,
+      message: `${data.nickname} a rejoint le stream`,
       timestamp: new Date()
     };
     
@@ -829,13 +829,13 @@ function App() {
     
     // Try to show browser notification if permission is granted
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(`${userType} ${data.nickname} joined`, {
-        body: `${data.nickname} has joined the stream`
+      new Notification(`${userType} ${data.nickname} a rejoint`, {
+        body: `${data.nickname} a rejoint le stream`
       });
     }
   }
   
-  // Function to check if a message matches the current mazic prefix and add it to the list
+  // Function to process messages with current prefix
   const processMessageWithCurrentPrefix = (data) => {
     const savedPrefix = localStorage.getItem('mazicPrefix');
       if (savedPrefix) {
@@ -888,7 +888,7 @@ function App() {
     setMazicList(newMazicMessages);
     
     // Display a console log that future messages will be filtered with this prefix
-    console.log(`Filtering messages with new prefix: "${newPrefix}"`);
+    console.log(`Filtrage des messages avec le nouveau préfixe : "${newPrefix}"`);
     
     // Try to save to API if that functionality is added later
     
@@ -907,7 +907,7 @@ function App() {
         className="btn btn-primary position-fixed top-0 end-0 m-3"
         onClick={toggleUserLists}
       >
-        <i className="bi bi-people-fill me-2"></i>Manage User Lists
+        <i className="bi bi-people-fill me-2"></i>Gérer les listes d'utilisateurs
       </button>
       
       {/* User Lists Panel */}
@@ -962,14 +962,14 @@ function App() {
           </div>
         ) : (
           <div className="connected-header">
-            <h2>Connected to: {username}</h2>
+            <h2>Connecté à : {username}</h2>
             <StatsBar 
               viewerCount={viewerCount}
               likeCount={likeCount}
               diamondsCount={diamondsCount}
             />
             <button onClick={disconnect} className="disconnect-button">
-              Disconnect
+              Déconnecter
             </button>
           </div>
         )}

@@ -80,7 +80,7 @@ const MazicList = ({
     <div className="mazic-container">
       <div className="mazic-header">
         <div className="mazic-title-container">
-          <h4>Filtered Messages</h4>
+          <h4>Messages filtrés</h4>
           <div className="mazic-prefix-display">
             {isEditingPrefix ? (
               <div className="mazic-prefix-editor">
@@ -96,14 +96,14 @@ const MazicList = ({
                 <button
                   className="mazic-save-btn"
                   onClick={savePrefixChanges}
-                  title="Save prefix"
+                  title="Enregistrer le préfixe"
                 >
                   <i className="bi bi-check"></i>
                 </button>
               </div>
             ) : (
               <div className="mazic-current-prefix" onClick={handlePrefixEdit}>
-                <span className="mazic-prefix-label">Prefix:</span>
+                <span className="mazic-prefix-label">Préfixe :</span>
                 <span className="mazic-prefix-value">{mazicPrefix}</span>
                 <i className="bi bi-pencil-fill mazic-edit-icon"></i>
               </div>
@@ -111,7 +111,7 @@ const MazicList = ({
           </div>
           {prefixSaved && (
             <div className="mazic-prefix-saved">
-              <span>New messages starting with "{mazicPrefix}" will be added here</span>
+              <span>Les nouveaux messages commençant par "{mazicPrefix}" seront ajoutés ici</span>
             </div>
           )}
         </div>
@@ -121,7 +121,7 @@ const MazicList = ({
             <button 
               className="mazic-clear-btn" 
               onClick={clearMazicList}
-              title="Clear all mazic messages"
+              title="Effacer tous les messages filtrés"
             >
               <i className="bi bi-trash"></i>
             </button>
@@ -131,7 +131,7 @@ const MazicList = ({
       
       <div className="mazic-list">
         {mazicList.length === 0 ? (
-          <p className="mazic-empty">No filtered messages yet. Messages starting with "{mazicPrefix}" will appear here.</p>
+          <p className="mazic-empty">Pas encore de messages filtrés. Les messages commençant par "{mazicPrefix}" apparaîtront ici.</p>
         ) : (
           <ul className="mazic-items">
             {mazicList.map((message, index) => (
@@ -142,7 +142,7 @@ const MazicList = ({
                     <button 
                       className="mazic-action-btn mazic-copy-btn"
                       onClick={() => copyToClipboard(message.includes(": ") ? message.split(": ")[1] : message, index)}
-                      title="Copy to clipboard"
+                      title="Copier dans le presse-papiers"
                     >
                       {copiedIndex === index ? (
                         <i className="bi bi-check2"></i>
@@ -153,7 +153,7 @@ const MazicList = ({
                     <button 
                       className="mazic-action-btn mazic-delete-btn"
                       onClick={() => removeFromMazicList(index)}
-                      title="Delete message"
+                      title="Supprimer le message"
                     >
                       <i className="bi bi-x-lg"></i>
                     </button>

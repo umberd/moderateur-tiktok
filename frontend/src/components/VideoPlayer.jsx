@@ -32,7 +32,7 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef }) => {
     
     if (!streamUrl) {
       console.error('No stream URL available')
-      setStreamError('No stream URL available for this LIVE')
+      setStreamError('Aucune URL de flux disponible pour ce LIVE')
       return
     }
     
@@ -61,7 +61,7 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef }) => {
       setStreamError(null)
     } else {
       console.error('FLV playback is not supported in this browser')
-      setStreamError('FLV playback is not supported in this browser')
+      setStreamError('La lecture FLV n\'est pas prise en charge par ce navigateur')
     }
   }
   

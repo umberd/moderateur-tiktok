@@ -26,7 +26,7 @@ const Settings = ({
   
   return (
     <div className="p-4 bg-lightBg dark:bg-darkBg rounded-lg shadow-md transition-colors duration-300 text-left">
-      <h3 className="text-xl font-semibold mb-6 text-darkText dark:text-lightText text-left">Settings</h3>
+      <h3 className="text-xl font-semibold mb-6 text-darkText dark:text-lightText text-left">Paramètres</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
         {/* Column 1 - Basic Settings */}
@@ -41,7 +41,7 @@ const Settings = ({
                 }} 
                 className="mr-2 h-5 w-5 rounded border-gray-300 text-primary focus:ring-secondary dark:border-gray-600 dark:bg-gray-700"
               />
-              <span className="text-darkText dark:text-lightText text-left">Dark Theme</span>
+              <span className="text-darkText dark:text-lightText text-left">Thème sombre</span>
             </label>
           </div>
           
@@ -56,7 +56,7 @@ const Settings = ({
                 }} 
                 className="mr-2 h-5 w-5 rounded border-gray-300 text-primary focus:ring-secondary dark:border-gray-600 dark:bg-gray-700"
               />
-              <span className="text-darkText dark:text-lightText text-left">Show Moderation</span>
+              <span className="text-darkText dark:text-lightText text-left">Afficher la modération</span>
             </label>
           </div>
           
@@ -71,7 +71,7 @@ const Settings = ({
                 }} 
                 className="mr-2 h-5 w-5 rounded border-gray-300 text-primary focus:ring-secondary dark:border-gray-600 dark:bg-gray-700"
               />
-              <span className="text-darkText dark:text-lightText text-left">Show AI Responses</span>
+              <span className="text-darkText dark:text-lightText text-left">Afficher les réponses IA</span>
             </label>
           </div>
           
@@ -86,7 +86,7 @@ const Settings = ({
                 }} 
                 className="mr-2 h-5 w-5 rounded border-gray-300 text-primary focus:ring-secondary dark:border-gray-600 dark:bg-gray-700"
               />
-              <span className="text-darkText dark:text-lightText text-left">Enable Sound Notifications</span>
+              <span className="text-darkText dark:text-lightText text-left">Activer les notifications sonores</span>
             </label>
           </div>
           
@@ -101,7 +101,7 @@ const Settings = ({
                 }} 
                 className="mr-2 h-5 w-5 rounded border-gray-300 text-primary focus:ring-secondary dark:border-gray-600 dark:bg-gray-700"
               />
-              <span className="text-darkText dark:text-lightText text-left">Enable Video Stream</span>
+              <span className="text-darkText dark:text-lightText text-left">Activer la vidéo en direct</span>
             </label>
           </div>
           
@@ -116,7 +116,7 @@ const Settings = ({
                 }} 
                 className="mr-2 h-5 w-5 rounded border-gray-300 text-primary focus:ring-secondary dark:border-gray-600 dark:bg-gray-700"
               />
-              <span className="text-darkText dark:text-lightText text-left">Enable Mention Notifications</span>
+              <span className="text-darkText dark:text-lightText text-left">Activer les notifications de mention</span>
             </label>
           </div>
 
@@ -126,7 +126,7 @@ const Settings = ({
         {/* Column 2 - Advanced Settings */}
         <div className="space-y-4 text-left">
           <div>
-            <label className="block mb-2 font-medium text-darkText dark:text-lightText text-left">Your Username:</label>
+            <label className="block mb-2 font-medium text-darkText dark:text-lightText text-left">Votre nom d'utilisateur :</label>
             <input 
               type="text" 
               value={yourUsername} 
@@ -144,12 +144,12 @@ const Settings = ({
                 }
               }} 
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary dark:bg-gray-700 dark:border-gray-600 dark:text-lightText placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-200 text-left"
-              placeholder="For mention notifications"
+              placeholder="Pour les notifications de mention"
             />
           </div>
           
           <div>
-            <label className="block mb-2 font-medium text-darkText dark:text-lightText text-left">AI Provider:</label>
+            <label className="block mb-2 font-medium text-darkText dark:text-lightText text-left">Fournisseur IA :</label>
             <div className="flex space-x-6 text-left">
               <label className="flex items-center cursor-pointer text-left">
                 <input 
@@ -184,7 +184,7 @@ const Settings = ({
           
           {aiProvider === 'ollama' && (
             <div>
-              <label className="block mb-2 font-medium text-darkText dark:text-lightText text-left">Ollama Model:</label>
+              <label className="block mb-2 font-medium text-darkText dark:text-lightText text-left">Modèle Ollama :</label>
               <select 
                 value={aiModel} 
                 onChange={(e) => {
@@ -202,7 +202,7 @@ const Settings = ({
           
           {aiProvider === 'openai' && (
             <div>
-              <label className="block mb-2 font-medium text-darkText dark:text-lightText text-left">OpenAI API Key:</label>
+              <label className="block mb-2 font-medium text-darkText dark:text-lightText text-left">Clé API OpenAI :</label>
               <input 
                 type="password" 
                 value={openaiApiKey} 

@@ -22,14 +22,14 @@ const ChatMessage = ({
     messageContent = (
       <div className="message-content join-content">
         <img className="miniprofilepicture" src={message.profilePictureUrl} alt="" />
-        <span className={`join-text ${usernameClass}`}>{message.nickname} joined the room</span>
+        <span className={`join-text ${usernameClass}`}>{message.nickname} a rejoint le salon</span>
       </div>
     );
     messageClass += ' join-message';
   } else if (message.type === 'follow') {
     messageContent = (
       <div className="message-content follow-content">
-        <span className={`follow-text ${usernameClass}`}>{message.nickname} followed the host</span>
+        <span className={`follow-text ${usernameClass}`}>{message.nickname} a suivi l'hôte</span>
       </div>
     );
     messageClass += ' follow-message';
@@ -56,7 +56,7 @@ const ChatMessage = ({
             {showModeration && message.moderation && (
               <div className={`moderation-result ${message.moderation.flagged ? 'flagged' : 'safe'}`}>
                 <div className="moderation-badge">
-                  {message.moderation.flagged ? '⚠️ Flagged' : '✅ Safe'}
+                  {message.moderation.flagged ? '⚠️ Signalé' : '✅ Sûr'}
                 </div>
                 
                 {message.moderation.flagged && message.moderation.categories && (
@@ -64,7 +64,7 @@ const ChatMessage = ({
                     {Object.entries(message.moderation.categories).map(([category, isFlagged]) => 
                       isFlagged && (
                         <span key={category} className="moderation-category">
-                          {category}
+                          {translateCategory(category)}
                         </span>
                       )
                     )}
@@ -76,10 +76,10 @@ const ChatMessage = ({
             {showAIResponses && (
               <div className="ai-response">
                 {message.pendingResponse ? (
-                  <div className="loading-response">Generating AI response...</div>
+                  <div className="loading-response">Génération de la réponse IA...</div>
                 ) : message.suggestedResponse ? (
                   <div className="suggested-response">
-                    <span className="response-label">AI Response: </span>
+                    <span className="response-label">Réponse IA : </span>
                     <span className="response-text">{message.suggestedResponse}</span>
                   </div>
                 ) : null}
@@ -106,20 +106,34 @@ const ChatMessage = ({
         <button 
           onClick={() => addToFriendsList(message.uniqueId, message.nickname)}
           className="friend-button"
-          title="Add to Friends"
+          title="Ajouter aux amis"
         >
           👍
         </button>
         <button 
           onClick={() => addToUndesirablesList(message.uniqueId, message.nickname)}
           className="undesirable-button"
-          title="Add to Undesirables"
+          title="Ajouter aux indésirables"
         >
           👎
         </button>
       </div>
     </div>
   )
+}
+
+// Helper function to translate moderation categories
+const translateCategory = (category) => {
+  const translations = {
+    'harassment': 'harcèlement',
+    'hate': 'haine',
+    'sexual': 'sexuel',
+    'violence': 'violence',
+    'self_harm': 'auto-mutilation',
+    'illegal': 'illégal'
+  };
+  
+  return translations[category] || category;
 }
 
 export default ChatMessage 

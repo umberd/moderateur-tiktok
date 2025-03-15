@@ -36,7 +36,7 @@ const ChatContainer = ({
         
         {showAIResponses && isGeneratingResponse && (
           <div className="ai-loading-indicator">
-            <span>AI is generating response...</span>
+            <span>L'IA génère une réponse...</span>
             <div className="loading-spinner"></div>
           </div>
         )}
@@ -58,7 +58,7 @@ const ChatContainer = ({
                 }
               }} 
             />
-            <span>Auto-scroll</span>
+            <span>Défilement automatique</span>
           </label>
         </div>
         
@@ -71,7 +71,7 @@ const ChatContainer = ({
               }
             }}
           >
-            <i className="bi bi-arrow-down-circle"></i> Jump to Latest
+            <i className="bi bi-arrow-down-circle"></i> Aller aux derniers messages
           </button>
         )}
       </div>
