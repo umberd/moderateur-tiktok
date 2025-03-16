@@ -51,11 +51,12 @@ class TikTokConnection {
 
         return new Promise((resolve, reject) => {
             this.socket.once('tiktokConnected', (state, data) => {
+
                 console.log('Connected to room', state.roomId);
-                
+                console.log(state);
                 // Store stream URL if available
                 if (state.roomInfo && state.roomInfo.stream_url && state.roomInfo.stream_url.flv_pull_url) {
-                    this.streamUrl = state.roomInfo.stream_url.flv_pull_url.SD1;
+                    this.streamUrl = state.roomInfo.stream_url.flv_pull_url.HD1;
                     console.log('Stream URL:', this.streamUrl);
                 } else {
                     console.warn('No stream URL available in roomInfo');

@@ -1003,7 +1003,6 @@ function App() {
       
       <header className="py-4 px-6 bg-gray-900 border-b border-gray-800">
         <div className="container mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 text-center">TikTok LIVE Chat Reader</h1>
           
           {!isConnected ? (
             <div className="max-w-2xl mx-auto">
