@@ -314,7 +314,7 @@ function App() {
     // Viewer stats
     conn.on('roomUser', (data) => {
       console.log(data);
-      
+
       setViewerCount(data.viewerCount)
     })
     
@@ -1041,7 +1041,7 @@ function App() {
               />
             </div>
           ) : (
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between">
               <div className="flex justify-around p-4 my-3 bg-gradient-to-r from-gray-800/80 to-gray-900/80 backdrop-blur-md rounded-2xl shadow-lg border border-gray-700/30">
 
                 <h2 className="text-xl font-semibold text-white flex items-center">
@@ -1056,11 +1056,11 @@ function App() {
                 likeCount={likeCount}
                 diamondsCount={diamondsCount}
               />
-              <div className="flex justify-around p-4 my-3 bg-gradient-to-r from-gray-800/80 to-gray-900/80 backdrop-blur-md rounded-2xl shadow-lg border border-gray-700/30">
+              <div className="flex justify-around p-4 my-3">
 
                 <button 
                   onClick={disconnect} 
-                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow transition-colors"
+                  className="h-10 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl shadow-lg transition-colors"
                 >
                   Déconnecter
                 </button>
@@ -1078,6 +1078,7 @@ function App() {
                 username={username}
                 enableFlvStream={enableFlvStream}
                 connectionRef={connectionRef}
+                openaiApiKey={openaiApiKey}
               />
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

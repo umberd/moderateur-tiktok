@@ -1,20 +1,52 @@
 import { useEffect, useRef, useState } from 'react'
 import flvjs from 'flv.js'
 
-const VideoPlayer = ({ username, enableFlvStream, connectionRef }) => {
+const VideoPlayer = ({ username, enableFlvStream, connectionRef,openaiApiKey }) => {
   const videoPlayerRef = useRef(null)
   const flvPlayerRef = useRef(null)
+  const audioContextRef = useRef(null)
+  const audioSourceRef = useRef(null)
+  const audioProcessorRef = useRef(null)
   const [streamError, setStreamError] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [transcript, setTranscript] = useState('');
+  const transcriptRef = useRef(null);
+
+
+  useEffect(() => {
+    if (transcriptRef.current) {
+      transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
+    }
+  }, [transcript]);
+
+
   useEffect(() => {
     if (enableFlvStream && flvjs.isSupported() && connectionRef && connectionRef.current) {
       setIsLoading(true)
       initializeVideoPlayer()
+      
+      // Initialize audio context when playback starts
+      const handlePlaying = () => {
+        if (videoPlayerRef.current && !audioContextRef.current) {
+          initializeAudioCapture();
+        }
+      };
+      
+      if (videoPlayerRef.current) {
+        videoPlayerRef.current.addEventListener('playing', handlePlaying);
+      }
+      
+      return () => {
+        if (videoPlayerRef.current) {
+          videoPlayerRef.current.removeEventListener('playing', handlePlaying);
+        }
+      };
     }
     
     return () => {
       destroyPlayer()
+      destroyAudioCapture()
     }
   }, [username, enableFlvStream, connectionRef])
   
@@ -92,6 +124,215 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef }) => {
     }
   }
   
+  const initializeAudioCapture = () => {
+    try {
+      // Create audio context
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioContextRef.current = new AudioContext();
+      
+      // Create source node from video element
+      audioSourceRef.current = audioContextRef.current.createMediaElementSource(videoPlayerRef.current);
+      
+      // Connect to destination (speakers) so we can still hear it
+      audioSourceRef.current.connect(audioContextRef.current.destination);
+      
+      console.log('Audio capture initialized');
+    } catch (error) {
+      console.error('Error initializing audio capture:', error);
+    }
+  };
+  
+  const destroyAudioCapture = () => {
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(console.error);
+      audioContextRef.current = null;
+      audioSourceRef.current = null;
+    }
+  };
+  
+  const startTranscription = async () => {
+    if (!audioContextRef.current || !audioSourceRef.current || isTranscribing) return;
+    
+    setIsTranscribing(true);
+    setTranscript('');
+    
+    try {
+      // Create a script processor node to access audio data
+      const bufferSize = 4096;
+      const processorNode = audioContextRef.current.createScriptProcessor(
+        bufferSize, 1, 1
+      );
+      
+      // Buffer to accumulate audio data before sending
+      let audioChunks = [];
+      
+      processorNode.onaudioprocess = (e) => {
+        const audioData = e.inputBuffer.getChannelData(0);
+        
+        // Convert Float32Array to Int16Array for compatibility with most APIs
+        const pcmData = convertFloat32ToInt16(audioData);
+        audioChunks.push(pcmData);
+        
+        // If we have enough data, send to OpenAI API
+        if (audioChunks.length >= 30) { // ~2 seconds of audio at 44.1kHz
+          const audioBlob = createAudioBlob(audioChunks);
+          sendToOpenAI(audioBlob);
+          audioChunks = [];
+        }
+      };
+      
+      // Connect processor node
+      audioSourceRef.current.connect(processorNode);
+      processorNode.connect(audioContextRef.current.destination);
+      
+      audioProcessorRef.current = processorNode;
+    } catch (error) {
+      console.error('Error starting transcription:', error);
+      setIsTranscribing(false);
+    }
+  };
+  
+  const stopTranscription = () => {
+    if (audioProcessorRef.current) {
+      audioProcessorRef.current.disconnect();
+      audioProcessorRef.current = null;
+    }
+    setIsTranscribing(false);
+  };
+  
+  const convertFloat32ToInt16 = (buffer) => {
+    const l = buffer.length;
+    const buf = new Int16Array(l);
+    
+    for (let i = 0; i < l; i++) {
+      buf[i] = Math.min(1, Math.max(-1, buffer[i])) * 0x7FFF;
+    }
+    
+    return buf;
+  };
+  
+  const createAudioBlob = (chunks) => {
+    // Combine all chunks into a single array
+    const totalLength = chunks.reduce((acc, val) => acc + val.length, 0);
+    const combined = new Int16Array(totalLength);
+    
+    let offset = 0;
+    for (const chunk of chunks) {
+      combined.set(chunk, offset);
+      offset += chunk.length;
+    }
+    
+    // Create WAV file
+    const wavBuffer = createWAVFile(combined);
+    return new Blob([wavBuffer], { type: 'audio/wav' });
+  };
+  
+  const createWAVFile = (samples) => {
+    const sampleRate = 44100;
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+    
+    // RIFF identifier
+    writeString(view, 0, 'RIFF');
+    // File length
+    view.setUint32(4, 36 + samples.length * 2, true);
+    // RIFF type
+    writeString(view, 8, 'WAVE');
+    // Format chunk identifier
+    writeString(view, 12, 'fmt ');
+    // Format chunk length
+    view.setUint32(16, 16, true);
+    // Sample format (1 = PCM)
+    view.setUint16(20, 1, true);
+    // Channels (1 = mono)
+    view.setUint16(22, 1, true);
+    // Sample rate
+    view.setUint32(24, sampleRate, true);
+    // Byte rate (sample rate * block align)
+    view.setUint32(28, sampleRate * 2, true);
+    // Block align (channels * bytes per sample)
+    view.setUint16(32, 2, true);
+    // Bits per sample
+    view.setUint16(34, 16, true);
+    // Data chunk identifier
+    writeString(view, 36, 'data');
+    // Data chunk length
+    view.setUint32(40, samples.length * 2, true);
+    
+    // Write the PCM samples
+    const offset = 44;
+    for (let i = 0; i < samples.length; i++) {
+      view.setInt16(offset + i * 2, samples[i], true);
+    }
+    
+    return buffer;
+  };
+  
+  const writeString = (view, offset, string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+  
+  const sendToOpenAI = async (audioBlob) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', audioBlob);
+      formData.append('model', 'whisper-1');
+      formData.append('language', 'fr');
+      formData.append('prompt', '');
+      formData.append('response_format', 'json');
+      
+      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data.text) {
+        data.text = data.text.replace(".", '.\n');
+        data.text = data.text.replace("!", '!\n');
+        data.text = data.text.replace("?", '?\n');
+        data.text = data.text.replace(",", ',\n');
+        data.text = data.text.replace(";", ';\n');
+        data.text = data.text.replace(":", ':\n');
+        setTranscript(prev => prev + ' ' + data.text);
+      }
+    } catch (error) {
+      console.error('Error sending audio to OpenAI:', error);
+    }
+  };
+  
+  const exportTranscript = () => {
+    if (!transcript) return;
+    
+    // Create a blob with the transcript text
+    const blob = new Blob([transcript], { type: 'text/plain;charset=utf-8' });
+    
+    // Create a temporary URL for the blob
+    const url = URL.createObjectURL(blob);
+    
+    // Create a download link
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `transcript-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.txt`;
+    
+    // Append to body, click and remove
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up the URL
+    URL.revokeObjectURL(url);
+  };
+  
   if (!enableFlvStream) {
     return null
   }
@@ -128,6 +369,43 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef }) => {
                 <p className="text-gray-300 font-medium">Connecting to stream...</p>
                 <p className="text-xs text-gray-400 mt-2">@{username}</p>
               </div>
+            </div>
+          )}
+          
+          {/* Transcription controls */}
+          {openaiApiKey && (
+          <div className="absolute top-4 right-4  flex gap-2">
+            {!isTranscribing ? (
+              <button 
+                onClick={startTranscription}
+                className="px-3 py-1 bg-pink-500/80 text-white rounded-lg text-sm hover:bg-pink-500"
+              >
+                Start Transcription
+              </button>
+            ) : (
+              <button 
+                onClick={stopTranscription}
+                className="px-3 py-1 bg-gray-600/80 text-white rounded-lg text-sm hover:bg-gray-600"
+              >
+                Stop Transcription
+              </button>
+            )}
+            
+            {transcript && (
+              <button 
+                onClick={exportTranscript}
+                className="px-3 py-1 bg-blue-500/80 text-white rounded-lg text-sm hover:bg-blue-500"
+              >
+                Export Transcript
+              </button>
+            )}
+          </div>
+          )}
+          
+          {/* Transcript display */}
+          {transcript && (
+            <div ref={transcriptRef} className="absolute bottom-16 left-4 right-4 max-h-32 overflow-y-auto bg-black/70 p-3 rounded-lg text-white text-sm">
+              <p className="whitespace-pre-wrap">{transcript}</p>
             </div>
           )}
         </>

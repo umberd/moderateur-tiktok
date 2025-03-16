@@ -73,7 +73,8 @@ const ChatMessage = ({
             >
               {message.nickname}
             </a>
-          {message.isFriend ? <span>(friend) - à rejoint le chat</span> : <span>à rejoint le chat</span>}
+            
+          <span><span className="text-xs text-gray-500">{formatTimestamp(message.timestamp)}</span> à rejoint le chat</span>
         </div>
         
         {/* User Actions */}
