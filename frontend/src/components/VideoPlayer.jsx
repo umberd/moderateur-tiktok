@@ -12,6 +12,9 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef,openaiApiKey }) 
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [transcript, setTranscript] = useState('');
   const transcriptRef = useRef(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const recordedChunksRef = useRef([]);
+  const mediaRecorderRef = useRef(null);
 
 
   useEffect(() => {
@@ -333,6 +336,93 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef,openaiApiKey }) 
     URL.revokeObjectURL(url);
   };
   
+  const startRecording = () => {
+    if (!videoPlayerRef.current || !flvPlayerRef.current || isRecording) return;
+    
+    try {
+      // Create a MediaStream from the video element
+      const stream = videoPlayerRef.current.captureStream();
+      
+      // Determine supported MIME type (try MP4 first, fallback to WebM)
+      let mimeType = 'video/mp4';
+      let fileExtension = 'mp4';
+      
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'video/webm';
+        fileExtension = 'webm';
+        console.log('MP4 recording not supported by this browser, falling back to WebM');
+      }
+      
+      // Initialize MediaRecorder with the stream
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: mimeType,
+        videoBitsPerSecond: 2500000 // 2.5 Mbps
+      });
+      
+      // Store file extension for later use
+      mediaRecorder.fileExtension = fileExtension;
+      
+      // Set up event handlers for recording
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+      
+      // Start recording
+      recordedChunksRef.current = [];
+      mediaRecorder.start(1000); // Collect data every second
+      mediaRecorderRef.current = mediaRecorder;
+      setIsRecording(true);
+      
+      console.log(`Recording started using ${mimeType} format`);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+    }
+  };
+  
+  const stopRecording = () => {
+    if (!isRecording || !mediaRecorderRef.current) return;
+    
+    try {
+      // Stop the MediaRecorder
+      mediaRecorderRef.current.stop();
+      
+      // Handle the stop event to download the recording
+      mediaRecorderRef.current.onstop = () => {
+        // Get the file extension that was determined during start
+        const fileExtension = mediaRecorderRef.current.fileExtension || 'mp4';
+        
+        // Create a blob from the recorded chunks with the appropriate type
+        const mimeType = fileExtension === 'mp4' ? 'video/mp4' : 'video/webm';
+        const blob = new Blob(recordedChunksRef.current, { type: mimeType });
+        
+        // Create a download link for the video
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `tiktok-live-${username}-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.${fileExtension}`;
+        
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+        
+        recordedChunksRef.current = [];
+        setIsRecording(false);
+        console.log(`Recording stopped and downloaded as ${fileExtension}`);
+      };
+    } catch (error) {
+      console.error('Error stopping recording:', error);
+      setIsRecording(false);
+    }
+  };
+  
   if (!enableFlvStream) {
     return null
   }
@@ -372,6 +462,31 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef,openaiApiKey }) 
             </div>
           )}
           
+          {/* Recording controls */}
+          <div className="absolute top-4 left-4 flex gap-2">
+            {!isRecording ? (
+              <button 
+                onClick={startRecording}
+                className="px-3 py-1 bg-red-500/80 text-white rounded-lg text-sm hover:bg-red-500 flex items-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <circle cx="12" cy="12" r="8" fill="currentColor" />
+                </svg>
+                Record
+              </button>
+            ) : (
+              <button 
+                onClick={stopRecording}
+                className="px-3 py-1 bg-gray-600/80 text-white rounded-lg text-sm hover:bg-gray-600 flex items-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <rect x="6" y="6" width="12" height="12" fill="currentColor" />
+                </svg>
+                Stop & Download
+              </button>
+            )}
+          </div>
+          
           {/* Transcription controls */}
           {openaiApiKey && (
           <div className="absolute top-4 right-4  flex gap-2">
@@ -406,6 +521,14 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef,openaiApiKey }) 
           {transcript && (
             <div ref={transcriptRef} className="absolute bottom-16 left-4 right-4 max-h-32 overflow-y-auto bg-black/70 p-3 rounded-lg text-white text-sm">
               <p className="whitespace-pre-wrap">{transcript}</p>
+            </div>
+          )}
+          
+          {/* Recording indicator */}
+          {isRecording && (
+            <div className="absolute top-16 left-4 flex items-center bg-black/70 px-3 py-1 rounded-lg">
+              <span className="h-3 w-3 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+              <span className="text-white text-xs">Recording</span>
             </div>
           )}
         </>
