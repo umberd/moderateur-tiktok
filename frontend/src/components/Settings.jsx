@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 const Settings = ({ 
   darkTheme, setDarkTheme,
   showModeration, setShowModeration,
@@ -12,6 +14,12 @@ const Settings = ({
   availableOllamaModels,
 }) => {
   // Function to toggle dark theme and update localStorage
+  useEffect(() => {
+    if (availableOllamaModels.length > 0) {
+      setAiModel(availableOllamaModels[0].name);
+    }
+  }, [availableOllamaModels]);
+
   const toggleDarkTheme = (checked) => {
     setDarkTheme(checked);
     localStorage.setItem('darkTheme', checked);

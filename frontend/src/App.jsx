@@ -475,10 +475,10 @@ function App() {
       // Remove after 5 seconds
       setTimeout(() => {
         removeNotification(notification.id)
-      }, 5000)
+      }, 50000)
       
       // Disconnect
-      disconnect()
+      //disconnect()
     })
     
     // Member join

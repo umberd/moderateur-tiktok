@@ -91,7 +91,7 @@ async function moderateText(text, apiKey = null) {
             openai;
             
         const response = await openaiClient.moderations.create({
-            model: "text-moderation-latest",
+            model: "omni-moderation-latest",
             input: text,
         });
         
@@ -356,21 +356,39 @@ function removeThinkingContent(text) {
 async function generateResponseWithOpenAI(text, apiKey = null) {
     try {
         // Use provided API key or fall back to environment variable
+        console.log(apiKey);
         const openaiClient = apiKey ? 
             new OpenAI({ apiKey }) : 
             openai;
             
-        const response = await openaiClient.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: text }
-            ],
-            max_tokens: 100,
-            temperature: 0.7,
+        // const response = await openaiClient.chat.completions.create({
+        //     model: "gpt-4o-mini",
+        //     messages: [
+        //         { role: "system", content: systemPrompt },
+        //         { role: "user", content: text }
+        //     ],
+        //     max_tokens: 200,
+        //     temperature: 0.7,
+        // });
+
+        const response = await openaiClient.responses.create({
+            model: "gpt-4o",
+            tools: [{ 
+                type: "web_search_preview" ,
+                user_location: {
+                    type: "approximate",
+                    country: "FR",
+                    city: "Paris",
+                    region: "Paris"
+                },
+                search_context_size: "low",
+            }],
+            tool_choice: "required",
+            instructions: systemPrompt,
+            input: text,
         });
         
-        return response.choices[0].message.content;
+        return response.output_text;
     } catch (error) {
         console.error('Error generating response with OpenAI:', error);
         return null;
@@ -419,7 +437,7 @@ io.on('connection', (socket) => {
             
             // Store AI provider settings in the socket object
             socket.aiProvider = options.aiProvider || 'openai';
-            socket.aiModel = options.aiModel || null;
+            socket.aiModel = options.aiModel;
             
             // Store moderation and response settings
             socket.showModeration = options.showModeration === true;
@@ -474,9 +492,15 @@ io.on('connection', (socket) => {
             msg.timestamp=new Date();
             socket.emit('member', msg)
         });
+
+        //tiktokConnectionWrapper.connection.sendMessage(`@${options.sessionId} Salut à tous`).catch(err => console.error(err));
+
         
         // Handle chat messages with moderation
         tiktokConnectionWrapper.connection.on('chat', async (msg) => {
+
+
+
             // Send message immediately
             const initialMsg = { ...msg,timestamp:new Date(), pendingModeration: true, pendingResponse: true };
             socket.emit('chat', initialMsg);
@@ -484,24 +508,26 @@ io.on('connection', (socket) => {
             // Apply moderation to comment based on provider
             if (msg.comment) {   
                 console.log(msg.nickname + ' : ' + msg.comment);             
+                console.log(socket.aiModel);
                 if (socket.showModeration && socket.aiProvider === 'ollama' && socket.aiModel) {
+                    console.log('Moderation with Ollama');
                     const moderationResult = await moderateTextWithOllama(msg.comment, socket.aiModel);
                     if (moderationResult) {
                         msg.moderation = moderationResult;
                         //console.log('Moderation result');
                         
                         // Log flagged content to server console
-                        if (moderationResult.flagged) {
-                            console.log('\nFlagged comment (Ollama):', msg.comment);
-                            console.log('Reason:', moderationResult.ollama_reason);
-                        }
+                        // if (moderationResult.flagged) {
+                        //     console.log('\nFlagged comment (Ollama):', msg.comment);
+                        //     console.log('Reason:', moderationResult.ollama_reason);
+                        // }
                     } else {
                         console.log('No moderation result');
                     }
-                } else if (socket.showModeration && (socket.openaiApiKey || process.env.OPENAI_API_KEY)) {
+                } else if (socket.showModeration && (socket.openaiApiKey )) {
                     //console.log('Moderation with OpenAI');
                     //console.log(msg.comment);
-                    const moderationResult = await moderateText(msg.comment, socket.openaiApiKey || process.env.OPENAI_API_KEY);
+                    const moderationResult = await moderateText(msg.comment, socket.openaiApiKey );
                     //console.log(moderationResult);
                     if (moderationResult) {
                         msg.moderation = moderationResult;
@@ -545,7 +571,7 @@ io.on('connection', (socket) => {
                         theMessage, 
                         socket.aiProvider, 
                         socket.aiModel, 
-                        socket.openaiApiKey || process.env.OPENAI_API_KEY
+                        socket.openaiApiKey 
                     );
                     if (suggestedResponse) {
                         msg.suggestedResponse = suggestedResponse;
