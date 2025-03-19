@@ -195,8 +195,8 @@ async function generateResponseModeration(text, apiKey = null,moderatePrompt) {
                 { role: "system", content: moderatePrompt },
                 { role: "user", content: text }
             ],
-            max_tokens: 100,
-            temperature: 0.7,
+            max_tokens: 300,
+            temperature: 0.1,
         });
         
         return response.choices[0].message.content;
@@ -267,6 +267,7 @@ Please respond in XML format using these tags and only these tags:
                 wierd_joke: reason.includes('wierd joke'),
                 conspiracy: reason.includes('conspiracy'),
                 racism: reason.includes('racism'),
+                other: reason,
             },
             category_scores: {
                 harassment: reason.includes('harassment') ? score : 0,
@@ -279,6 +280,7 @@ Please respond in XML format using these tags and only these tags:
                 wierd_joke: reason.includes('wierd joke') ? score : 0,
                 conspiracy: reason.includes('conspiracy') ? score : 0,
                 racism: reason.includes('racism') ? score : 0,
+                other: reason ? score : 0,
             },
             ollama_reason: reason
         };
@@ -490,7 +492,7 @@ io.on('connection', (socket) => {
         tiktokConnectionWrapper.connection.on('roomUser', msg => socket.emit('roomUser', msg));
         tiktokConnectionWrapper.connection.on('member', msg => {
             msg.timestamp=new Date();
-            console.log(msg);
+            //console.log(msg);
             socket.emit('member', msg)
         });
 
@@ -509,7 +511,6 @@ io.on('connection', (socket) => {
             // Apply moderation to comment based on provider
             if (msg.comment) {   
                 console.log(msg.nickname + ' : ' + msg.comment);             
-                console.log(socket.aiModel);
                 if (socket.showModeration && socket.aiProvider === 'ollama' && socket.aiModel) {
                     console.log('Moderation with Ollama');
                     const moderationResult = await moderateTextWithOllama(msg.comment, socket.aiModel);

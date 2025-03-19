@@ -56,7 +56,7 @@ class TikTokConnection {
                 console.log(state);
                 // Store stream URL if available
                 if (state.roomInfo && state.roomInfo.stream_url && state.roomInfo.stream_url.flv_pull_url) {
-                    this.streamUrl = state.roomInfo.stream_url.flv_pull_url.HD1;
+                    this.streamUrl = state.roomInfo.stream_url.flv_pull_url;
                     console.log('Stream URL:', this.streamUrl);
                 } else {
                     console.warn('No stream URL available in roomInfo');
