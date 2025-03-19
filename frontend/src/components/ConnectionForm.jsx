@@ -13,6 +13,17 @@ const ConnectionForm = ({
   const [showSessionId, setShowSessionId] = useState(false);
 
   useEffect(() => {
+    //set username from local storage
+    setUsername(localStorage.getItem('username') || "");
+    setSessionId(localStorage.getItem('sessionId') || "");
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('username', username);
+    localStorage.setItem('sessionId', sessionId);
+  }, [username, sessionId]);
+
+  useEffect(() => {
     const handleKeyDown = (event) => {
       // Check for Ctrl+K
       if (event.ctrlKey && event.key === 'k') {
@@ -62,7 +73,7 @@ const ConnectionForm = ({
           <span className="text-gray-400">#</span>
         </div>
         <input
-          type="text"
+          type="password" 
           placeholder="session_id (optional)"
           value={sessionId}
           onChange={(e) => setSessionId(e.target.value)}
