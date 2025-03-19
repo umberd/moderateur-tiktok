@@ -993,7 +993,7 @@ function App() {
       {/* Toggle button for user lists */}
       <button 
         id="toggleUserLists" 
-        className="fixed top-4 right-4 z-50 flex items-center bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg shadow-lg transition-colors"
+        className="fixed top-4 left-4 z-50 flex items-center bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg shadow-lg transition-colors"
         onClick={toggleUserLists}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">

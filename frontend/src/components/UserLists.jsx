@@ -240,7 +240,7 @@ const UserLists = ({
                           <div className="user-info">
                             <img 
                               className={`w-8 h-8 rounded-full mr-3 object-cover border-2 `} 
-                              src={undesirable.profilePictureUrl} 
+                              src={profilePictureUrl} 
                               alt="" 
                               onError={(e) => { e.target.src = 'https://placehold.co/32x32?text=?' }}
                             />
@@ -337,6 +337,12 @@ const UserLists = ({
                       <div key={`search-${index}`} className="user-list-item card mb-2">
                         <div className="card-body">
                           <div className="user-info">
+                            <img 
+                              className={`w-8 h-8 rounded-full mr-3 object-cover border-2 `} 
+                              src={profilePictureUrl} 
+                              alt="" 
+                              onError={(e) => { e.target.src = 'https://placehold.co/32x32?text=?' }}
+                            />
                             <a 
                               href={`https://www.tiktok.com/@${tiktokUsername}`} 
                               target="_blank" 

@@ -1,3 +1,6 @@
 node_modules
 dist
 .env
+frontend/node_modules
+data/user_database.db
+data/tiktok_chat.db
