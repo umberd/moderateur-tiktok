@@ -490,6 +490,7 @@ io.on('connection', (socket) => {
         tiktokConnectionWrapper.connection.on('roomUser', msg => socket.emit('roomUser', msg));
         tiktokConnectionWrapper.connection.on('member', msg => {
             msg.timestamp=new Date();
+            console.log(msg);
             socket.emit('member', msg)
         });
 
@@ -600,14 +601,14 @@ io.on('connection', (socket) => {
         tiktokConnectionWrapper.connection.on('subscribe', msg => socket.emit('subscribe', msg));
 
         // Add a new function to handle room state data
-        socket.on('getUserStatus', async (tiktokId) => {
+        socket.on('getUserStatus', async (uniqueId) => {
             try {
                 // Get user's status in lists
-                const isFriend = await db.isUserFriend(tiktokId);
-                const undesirableStatus = await db.isUserUndesirable(tiktokId);
+                const isFriend = await db.isUserFriend(uniqueId);
+                const undesirableStatus = await db.isUserUndesirable(uniqueId);
                 
                 socket.emit('userStatus', {
-                    tiktokId,
+                    uniqueId,
                     isFriend,
                     ...undesirableStatus
                 });
@@ -681,11 +682,11 @@ app.get('/api/users/search', async (req, res) => {
 
 app.post('/api/users/friends', async (req, res) => {
     try {
-        const { tiktokId, nickname } = req.body;
-        if (!tiktokId || !nickname) {
-            return res.status(400).json({ error: 'TikTok ID and nickname are required' });
+        const { uniqueId, userId, nickname, profilePictureUrl } = req.body;
+        if (!uniqueId || !userId || !nickname) {
+            return res.status(400).json({ error: 'uniqueId, userId and nickname are required' });
         }
-        const added = await db.addToFriends(tiktokId, nickname);
+        const added = await db.addToFriends(uniqueId, userId, nickname, profilePictureUrl);
         res.json({ success: true, added });
     } catch (error) {
         console.error('Error adding friend:', error);
@@ -695,11 +696,11 @@ app.post('/api/users/friends', async (req, res) => {
 
 app.post('/api/users/undesirables', async (req, res) => {
     try {
-        const { tiktokId, nickname, reason } = req.body;
-        if (!tiktokId || !nickname) {
-            return res.status(400).json({ error: 'TikTok ID and nickname are required' });
+        const { uniqueId, userId, nickname, reason, profilePictureUrl } = req.body;
+        if (!uniqueId || !userId || !nickname) {
+            return res.status(400).json({ error: 'uniqueId, userId and nickname are required' });
         }
-        const added = await db.addToUndesirables(tiktokId, nickname, reason || '');
+        const added = await db.addToUndesirables(uniqueId, userId, nickname, reason || '', profilePictureUrl);
         res.json({ success: true, added });
     } catch (error) {
         console.error('Error adding undesirable:', error);
@@ -707,10 +708,10 @@ app.post('/api/users/undesirables', async (req, res) => {
     }
 });
 
-app.delete('/api/users/friends/:tiktokId', async (req, res) => {
+app.delete('/api/users/friends/:uniqueId', async (req, res) => {
     try {
-        const { tiktokId } = req.params;
-        const removed = await db.removeFromFriends(tiktokId);
+        const { uniqueId } = req.params;
+        const removed = await db.removeFromFriends(uniqueId);
         res.json({ success: true, removed });
     } catch (error) {
         console.error('Error removing friend:', error);
@@ -718,10 +719,10 @@ app.delete('/api/users/friends/:tiktokId', async (req, res) => {
     }
 });
 
-app.delete('/api/users/undesirables/:tiktokId', async (req, res) => {
+app.delete('/api/users/undesirables/:uniqueId', async (req, res) => {
     try {
-        const { tiktokId } = req.params;
-        const removed = await db.removeFromUndesirables(tiktokId);
+        const { uniqueId } = req.params;
+        const removed = await db.removeFromUndesirables(uniqueId);
         res.json({ success: true, removed });
     } catch (error) {
         console.error('Error removing undesirable:', error);

@@ -50,20 +50,23 @@ const UserLists = ({
   };
   
   const openAddUndesirableModal = (user) => {
-    setUserToAddAsUndesirable(user);
+    // Ensure we have all TikTok API schema fields
+    
+    const userData = {
+      uniqueId: user.uniqueId || user.tiktokId || user.tiktok_id,
+      userId: user.userId || user.uniqueId || user.tiktokId, // Fallback to uniqueId if userId is not available
+      nickname: user.nickname,
+      profilePictureUrl: user.profilePictureUrl || null
+    };
+    setUserToAddAsUndesirable(userData);
   };
   
   const confirmAddUndesirable = () => {
     if (userToAddAsUndesirable) {
       // Support both property naming conventions
-      const tiktokId = userToAddAsUndesirable.tiktokId || userToAddAsUndesirable.tiktok_id;
-      const nickname = userToAddAsUndesirable.nickname;
       
-      addToUndesirablesList(
-        tiktokId, 
-        nickname, 
-        undesirableReason
-      );
+      
+      addToUndesirablesList(userToAddAsUndesirable,undesirableReason);
       setUserToAddAsUndesirable(null);
       setUndesirableReason('');
     }
@@ -74,7 +77,18 @@ const UserLists = ({
     setUndesirableReason('');
   };
 
-  // Handle quick remove functionality
+  // Function to extract consistent fields from user objects in different formats
+  const extractUserFields = (user) => {
+    return {
+      uniqueId: user.uniqueId || user.tiktokId || user.tiktok_id,
+      userId: user.userId || user.user_id || user.uniqueId, // Fallback to uniqueId if userId is missing
+      nickname: user.nickname,
+      profilePictureUrl: user.profilePictureUrl || user.profile_picture_url,
+      reason: user.reason || ''
+    };
+  };
+
+  // Update the handleQuickRemoveSearch to use the new helper function
   const handleQuickRemoveSearch = (query) => {
     setQuickRemoveQuery(query);
     
@@ -88,13 +102,17 @@ const UserLists = ({
     // Filter friends list
     const filteredFriends = friends.filter(friend => 
       friend.nickname.toLowerCase().includes(queryLower) || 
-      friend.tiktokId.toLowerCase().includes(queryLower)
+      (friend.uniqueId && friend.uniqueId.toLowerCase().includes(queryLower)) ||
+      (friend.tiktokId && friend.tiktokId.toLowerCase().includes(queryLower)) ||
+      (friend.tiktok_id && friend.tiktok_id.toLowerCase().includes(queryLower))
     );
     
     // Filter undesirables list
     const filteredUndesirables = undesirables.filter(undesirable => 
       undesirable.nickname.toLowerCase().includes(queryLower) || 
-      undesirable.tiktokId.toLowerCase().includes(queryLower)
+      (undesirable.uniqueId && undesirable.uniqueId.toLowerCase().includes(queryLower)) ||
+      (undesirable.tiktokId && undesirable.tiktokId.toLowerCase().includes(queryLower)) ||
+      (undesirable.tiktok_id && undesirable.tiktok_id.toLowerCase().includes(queryLower))
     );
     
     setFilteredUsers({
@@ -160,40 +178,48 @@ const UserLists = ({
                 {friends.length === 0 ? (
                   <div className="empty-list-message">Aucun ami dans la liste</div>
                 ) : (
-                  friends.map((friend, index) => (
-                    <div key={`friend-${index}`} className="user-list-item card mb-2">
-                      <div className="card-body">
-                        <div className="user-info">
-                          <a 
-                            href={`https://www.tiktok.com/@${friend.tiktokId}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="user-nickname"
-                          >
-                            {friend.nickname}
-                          </a>
-                          <span className="user-id">@{friend.tiktokId}</span>
-                        </div>
-                        <div className="user-actions mt-2">
-                          <button 
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => removeFriend(friend.tiktokId)}
-                          >
-                            Supprimer
-                          </button>
-                          <button
-                            className="btn btn-sm btn-outline-warning ms-2"
-                            onClick={() => openAddUndesirableModal({
-                              tiktok_id: friend.tiktokId,
-                              nickname: friend.nickname
-                            })}
-                          >
-                            Déplacer vers Indésirables
-                          </button>
+                  friends.map((friend, index) => {
+                    // Only destructure the fields we're using to avoid linter warnings
+                    const { uniqueId, nickname } = extractUserFields(friend);
+                    return (
+                      <div key={`friend-${index}`} className="user-list-item card mb-2">
+                        <div className="card-body">
+                          <div className="user-info">
+                          <img 
+                            className={`w-8 h-8 rounded-full mr-3 object-cover border-2 `} 
+                            src={friend.profilePictureUrl} 
+                            alt="" 
+                            onError={(e) => { e.target.src = 'https://placehold.co/32x32?text=?' }}
+                          />
+                            <a 
+                              href={`https://www.tiktok.com/@${uniqueId}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="user-nickname"
+                            >
+                              {nickname}
+                            </a>
+                            <span className="user-id">@{uniqueId}</span>
+                            <span className="user-id">@{friend.userId}</span>
+                          </div>
+                          <div className="user-actions mt-2">
+                            <button 
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => removeFriend(uniqueId)}
+                            >
+                              Supprimer
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-warning ms-2"
+                              onClick={() => openAddUndesirableModal(extractUserFields(friend))}
+                            >
+                              Déplacer vers Indésirables
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -205,42 +231,53 @@ const UserLists = ({
                 {undesirables.length === 0 ? (
                   <div className="empty-list-message">Aucun indésirable dans la liste</div>
                 ) : (
-                  undesirables.map((undesirable, index) => (
-                    <div key={`undesirable-${index}`} className="user-list-item card mb-2">
-                      <div className="card-body">
-                        <div className="user-info">
-                          <a 
-                            href={`https://www.tiktok.com/@${undesirable.tiktokId}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="user-nickname"
-                          >
-                            {undesirable.nickname}
-                          </a>
-                          <span className="user-id">@{undesirable.tiktokId}</span>
-                          {undesirable.reason && (
-                            <span className="undesirable-reason badge bg-danger ms-2">
-                              Raison : {undesirable.reason}
-                            </span>
-                          )}
-                        </div>
-                        <div className="user-actions mt-2">
-                          <button 
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => removeUndesirable(undesirable.tiktokId)}
-                          >
-                            Supprimer
-                          </button>
-                          <button
-                            className="btn btn-sm btn-outline-primary ms-2"
-                            onClick={() => addToFriendsList(undesirable.tiktokId, undesirable.nickname)}
-                          >
-                            Déplacer vers Amis
-                          </button>
+                  undesirables.map((undesirable, index) => {
+                    // Only destructure the fields we're using to avoid linter warnings
+                    const { uniqueId, nickname, reason, profilePictureUrl } = extractUserFields(undesirable);
+                    return (
+                      <div key={`undesirable-${index}`} className="user-list-item card mb-2">
+                        <div className="card-body">
+                          <div className="user-info">
+                            <img 
+                              className={`w-8 h-8 rounded-full mr-3 object-cover border-2 `} 
+                              src={undesirable.profilePictureUrl} 
+                              alt="" 
+                              onError={(e) => { e.target.src = 'https://placehold.co/32x32?text=?' }}
+                            />
+                            <a 
+                              href={`https://www.tiktok.com/@${uniqueId}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="user-nickname"
+                            >
+                              {nickname}
+                            </a>
+                            <span className="user-id">@{uniqueId}</span>
+                            <span className="user-id">@{undesirable.userId}</span>
+                            {reason && (
+                              <span className="undesirable-reason badge bg-danger ms-2">
+                                Raison : {reason}
+                              </span>
+                            )}
+                          </div>
+                          <div className="user-actions mt-2">
+                            <button 
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => removeUndesirable(uniqueId)}
+                            >
+                              Supprimer
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-primary ms-2"
+                              onClick={() => addToFriendsList(undesirable)}
+                            >
+                              Déplacer vers Amis
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -285,16 +322,15 @@ const UserLists = ({
                   <div className="empty-list-message">Aucun résultat trouvé</div>
                 ) : (
                   searchResults.map((user, index) => {
-                    // Support both snake_case and camelCase property names
-                    const tiktokId = user.tiktokId || user.tiktok_id;
-                    const nickname = user.nickname;
+                    // Use the helper function to extract consistent fields
+                    const { uniqueId: tiktokUsername, nickname, profilePictureUrl } = extractUserFields(user);
                     
                     // Check if the user is in either list
                     const isFriend = friends.some(f => 
-                      (f.tiktokId === tiktokId) || (f.tiktok_id === tiktokId)
+                      (f.uniqueId === tiktokUsername) || (f.tiktokId === tiktokUsername) || (f.tiktok_id === tiktokUsername)
                     );
                     const isUndesirable = undesirables.some(u => 
-                      (u.tiktokId === tiktokId) || (u.tiktok_id === tiktokId)
+                      (u.uniqueId === tiktokUsername) || (u.tiktokId === tiktokUsername) || (u.tiktok_id === tiktokUsername)
                     );
                     
                     return (
@@ -302,14 +338,14 @@ const UserLists = ({
                         <div className="card-body">
                           <div className="user-info">
                             <a 
-                              href={`https://www.tiktok.com/@${tiktokId}`} 
+                              href={`https://www.tiktok.com/@${tiktokUsername}`} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="user-nickname"
                             >
                               {nickname}
                             </a>
-                            <span className="user-id">@{tiktokId}</span>
+                            <span className="user-id">@{tiktokUsername}</span>
                             {(user.is_friend || isFriend) && (
                               <span className="user-status friend badge bg-primary ms-2">Ami</span>
                             )}
@@ -327,16 +363,13 @@ const UserLists = ({
                               <>
                                 <button 
                                   className="btn btn-sm btn-outline-primary me-2"
-                                  onClick={() => addToFriendsList(tiktokId, nickname)}
+                                  onClick={() => addToFriendsList(undesirables)}
                                 >
                                   Ajouter aux Amis
                                 </button>
                                 <button 
                                   className="btn btn-sm btn-outline-danger"
-                                  onClick={() => openAddUndesirableModal({
-                                    tiktok_id: tiktokId,
-                                    nickname: nickname
-                                  })}
+                                  onClick={() => openAddUndesirableModal(extractUserFields(user))}
                                 >
                                   Ajouter aux Indésirables
                                 </button>
@@ -350,7 +383,7 @@ const UserLists = ({
                                 </span>
                                 <button 
                                   className="btn btn-sm btn-outline-danger"
-                                  onClick={() => removeFriend(tiktokId)}
+                                  onClick={() => removeFriend(tiktokUsername)}
                                 >
                                   Supprimer
                                 </button>
@@ -364,7 +397,7 @@ const UserLists = ({
                                 </span>
                                 <button 
                                   className="btn btn-sm btn-outline-danger"
-                                  onClick={() => removeUndesirable(tiktokId)}
+                                  onClick={() => removeUndesirable(tiktokUsername)}
                                 >
                                   Supprimer
                                 </button>
@@ -408,23 +441,26 @@ const UserLists = ({
                     Amis ({filteredUsers.friends.length})
                   </h4>
                   <div className="list-group">
-                    {filteredUsers.friends.map((friend, index) => (
-                      <div key={`quick-friend-${index}`} className="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                          <strong>{friend.nickname}</strong>
-                          <span className="text-muted ms-2">@{friend.tiktokId}</span>
+                    {filteredUsers.friends.map((friend, index) => {
+                      const { uniqueId, nickname } = extractUserFields(friend);
+                      return (
+                        <div key={`quick-friend-${index}`} className="list-group-item d-flex justify-content-between align-items-center">
+                          <div>
+                            <strong>{nickname}</strong>
+                            <span className="text-muted ms-2">@{uniqueId}</span>
+                          </div>
+                          <div>
+                            <button 
+                              className="btn btn-sm btn-danger"
+                              onClick={() => removeFriend(uniqueId)}
+                            >
+                              <i className="bi bi-trash me-1"></i>
+                              Supprimer
+                            </button>
+                          </div>
                         </div>
-                        <div>
-                          <button 
-                            className="btn btn-sm btn-danger"
-                            onClick={() => removeFriend(friend.tiktokId)}
-                          >
-                            <i className="bi bi-trash me-1"></i>
-                            Supprimer
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -437,26 +473,29 @@ const UserLists = ({
                     Indésirables ({filteredUsers.undesirables.length})
                   </h4>
                   <div className="list-group">
-                    {filteredUsers.undesirables.map((undesirable, index) => (
-                      <div key={`quick-undesirable-${index}`} className="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                          <strong>{undesirable.nickname}</strong>
-                          <span className="text-muted ms-2">@{undesirable.tiktokId}</span>
-                          {undesirable.reason && (
-                            <span className="badge bg-danger ms-2">{undesirable.reason}</span>
-                          )}
+                    {filteredUsers.undesirables.map((undesirable, index) => {
+                      const { uniqueId, nickname, reason } = extractUserFields(undesirable);
+                      return (
+                        <div key={`quick-undesirable-${index}`} className="list-group-item d-flex justify-content-between align-items-center">
+                          <div>
+                            <strong>{nickname}</strong>
+                            <span className="text-muted ms-2">@{uniqueId}</span>
+                            {reason && (
+                              <span className="badge bg-danger ms-2">{reason}</span>
+                            )}
+                          </div>
+                          <div>
+                            <button 
+                              className="btn btn-sm btn-danger"
+                              onClick={() => removeUndesirable(uniqueId)}
+                            >
+                              <i className="bi bi-trash me-1"></i>
+                              Supprimer
+                            </button>
+                          </div>
                         </div>
-                        <div>
-                          <button 
-                            className="btn btn-sm btn-danger"
-                            onClick={() => removeUndesirable(undesirable.tiktokId)}
-                          >
-                            <i className="bi bi-trash me-1"></i>
-                            Supprimer
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

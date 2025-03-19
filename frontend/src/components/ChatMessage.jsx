@@ -8,6 +8,8 @@ const ChatMessage = ({
   addToUndesirablesList 
 }) => {
   const [showActions, setShowActions] = useState(false)
+  const [showReasonModal, setShowReasonModal] = useState(false)
+  const [reasonText, setReasonText] = useState('')
   
   // Determine username styles based on user status
   const getUsernameStyles = () => {
@@ -48,6 +50,18 @@ const ChatMessage = ({
     }
   }
   
+  // Handle the reason submission
+  const handleReasonSubmit = () => {
+    addToUndesirablesList(message, reasonText)
+    setShowReasonModal(false)
+    setReasonText('')
+  }
+
+  // Open the reason modal
+  const openReasonModal = () => {
+    setShowReasonModal(true)
+  }
+  
   const { textColor } = getUsernameStyles()
   
   // Render different message types
@@ -81,7 +95,7 @@ const ChatMessage = ({
         <div className={`absolute -right-1 -top-1 transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
           <div className="flex bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden">
             <button 
-              onClick={() => addToFriendsList(message.uniqueId, message.nickname)}
+              onClick={() => addToFriendsList(message)}
               className="p-1.5 text-xs hover:bg-emerald-500/20 transition-colors focus:outline-none"
               title="Add to friends"
             >
@@ -90,7 +104,7 @@ const ChatMessage = ({
               </svg>
             </button>
             <button 
-              onClick={() => addToUndesirablesList(message.uniqueId, message.nickname)}
+              onClick={openReasonModal}
               className="p-1.5 text-xs hover:bg-rose-500/20 transition-colors focus:outline-none"
               title="Add to undesirables"
             >
@@ -100,6 +114,40 @@ const ChatMessage = ({
             </button>
           </div>
         </div>
+
+        {/* Reason Modal */}
+        {showReasonModal && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+            <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-xl p-5 w-full max-w-md">
+              <h3 className="text-xl font-bold text-white mb-4">Add to Undesirables</h3>
+              <p className="text-gray-300 mb-4">Please provide a reason for adding <span className="font-bold text-rose-400">{message.nickname}</span> to the undesirables list:</p>
+              
+              <textarea
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 focus:outline-none resize-none"
+                rows="3"
+                placeholder="Enter reason here..."
+                value={reasonText}
+                onChange={(e) => setReasonText(e.target.value)}
+              ></textarea>
+              
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  onClick={() => setShowReasonModal(false)}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleReasonSubmit}
+                  className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!reasonText.trim()}
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     )
   } 
@@ -209,7 +257,7 @@ const ChatMessage = ({
       <div className={`absolute -right-1 -top-1 transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
         <div className="flex bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden">
           <button 
-            onClick={() => addToFriendsList(message.uniqueId, message.nickname)}
+            onClick={() => addToFriendsList(message)}
             className="p-1.5 text-xs hover:bg-emerald-500/20 transition-colors focus:outline-none"
             title="Add to friends"
           >
@@ -218,7 +266,7 @@ const ChatMessage = ({
             </svg>
           </button>
           <button 
-            onClick={() => addToUndesirablesList(message.uniqueId, message.nickname)}
+            onClick={openReasonModal}
             className="p-1.5 text-xs hover:bg-rose-500/20 transition-colors focus:outline-none"
             title="Add to undesirables"
           >
@@ -228,6 +276,40 @@ const ChatMessage = ({
           </button>
         </div>
       </div>
+      
+      {/* Reason Modal */}
+      {showReasonModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-xl p-5 w-full max-w-md">
+            <h3 className="text-xl font-bold text-white mb-4">Add to Undesirables</h3>
+            <p className="text-gray-300 mb-4">Please provide a reason for adding <span className="font-bold text-rose-400">{message.nickname}</span> to the undesirables list:</p>
+            
+            <textarea
+              className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 focus:outline-none resize-none"
+              rows="3"
+              placeholder="Enter reason here..."
+              value={reasonText}
+              onChange={(e) => setReasonText(e.target.value)}
+            ></textarea>
+            
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => setShowReasonModal(false)}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReasonSubmit}
+                className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!reasonText.trim()}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

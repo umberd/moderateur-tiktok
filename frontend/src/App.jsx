@@ -26,6 +26,7 @@ function App() {
   const [isConnecting, setIsConnecting] = useState(false)
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
+  const [sessionId, setSessionId] = useState('')
 
   const [availableOllamaModels, setAvailableOllamaModels] = useState([])
   
@@ -269,7 +270,8 @@ function App() {
         aiModel,
         showModeration,
         showResponses: showAIResponses,
-        openaiApiKey: aiProvider === 'openai' ? openaiApiKey : undefined
+        openaiApiKey: aiProvider === 'openai' ? openaiApiKey : undefined,
+        sessionId: sessionId
       })
       
       setIsConnected(true)
@@ -518,17 +520,18 @@ function App() {
   
   const checkUserStatus = (data) => {
     // Check if user is in friends or undesirables list
-    // userId from chat messages will match with tiktokId in our lists
-    //console.log(data)
-    const userId = data.uniqueId;
+    // userId from chat messages will match with uniqueId in our lists
+    const tiktokUsername = data.uniqueId;
 
-    const friendListNow=JSON.parse(localStorage.getItem('friendsList'));
-    const undesirablesListNow=JSON.parse(localStorage.getItem('undesirablesList'));
+    const friendListNow = JSON.parse(localStorage.getItem('friendsList'));
+    const undesirablesListNow = JSON.parse(localStorage.getItem('undesirablesList'));
         
     // Handle both snake_case (from DB) and camelCase (from transformed data)
-    const isFriend = friendListNow.some(friend => friend.tiktokId === userId);
+    const isFriend = friendListNow.some(friend => 
+      friend.uniqueId === tiktokUsername || friend.tiktokId === tiktokUsername);
     
-    const isUndesirable = undesirablesListNow.some(undesirable => undesirable.tiktokId === userId);
+    const isUndesirable = undesirablesListNow.some(undesirable => 
+      undesirable.uniqueId === tiktokUsername || undesirable.tiktokId === tiktokUsername);
 
     return {
       isFriend,
@@ -604,9 +607,9 @@ function App() {
   }
   
   // Add user to friends list
-  const addToFriendsList = async (userId, nickname) => {
+  const addToFriendsList = async (user) => {
     try {
-      const response = await UserApi.addToFriendsList(userId, nickname)
+      const response = await UserApi.addToFriendsList(user)
       // API now directly returns the updated array
       setFriendsList(response || [])
     } catch (error) {
@@ -614,14 +617,16 @@ function App() {
       
       // Fallback - add locally
       const newFriend = {
-        tiktokId: userId,
-        nickname: nickname,
+        uniqueId: user.uniqueId,
+        userId: user.uniqueId, // For backward compatibility, use uniqueId as userId
+        nickname: user.nickname,
+        profilePictureUrl: user.profilePictureUrl,
         addedAt: new Date().toISOString()
       }
       
       setFriendsList(prevList => {
         // Don't add duplicates
-        if (prevList.some(item => item.tiktokId === userId)) {
+        if (prevList.some(item => item.uniqueId === user.uniqueId || item.tiktokId === user.uniqueId)) {
           return prevList
         }
         
@@ -633,25 +638,25 @@ function App() {
     
     // Remove from undesirables if present
     setUndesirablesList(prevList => {
-      const newList = prevList.filter(item => item.tiktokId !== userId)
+      const newList = prevList.filter(item => !(item.uniqueId === user.uniqueId || item.tiktokId === user.uniqueId))
       localStorage.setItem('undesirablesList', JSON.stringify(newList))
       return newList
     })
     loadUserLists();
 
     // Update the userStatus for all existing chat messages
-    updateChatMessagesStatus(userId, {isFriend: true, isUndesirable: false})
+    updateChatMessagesStatus(user.uniqueId, {isFriend: true, isUndesirable: false})
   }
   
   // Add user to undesirables list
-  const addToUndesirablesList = async (userId, nickname, reason = '') => {
+  const addToUndesirablesList = async (user,reason = '') => {
     try {
       if(reason == ""){
         //ask for reason in a input box
          reason = prompt("Enter reason for adding to undesirables list")
       }
-      // Remove the prompt and let the UserLists component handle collecting the reason
-      const response = await UserApi.addToUndesirablesList(userId, nickname, reason)
+      
+      const response = await UserApi.addToUndesirablesList(user,reason)
       // API now directly returns the updated array
       setUndesirablesList(response || [])
     } catch (error) {
@@ -659,15 +664,17 @@ function App() {
       
       // Fallback - add locally
       const newUndesirable = {
-        tiktokId: userId,
-        nickname: nickname,
+        uniqueId: user.uniqueId,
+        userId: user.uniqueId, // For backward compatibility, use uniqueId as userId
+        nickname: user.nickname,
+        profilePictureUrl: user.profilePictureUrl,
         reason: reason,
         addedAt: new Date().toISOString()
       }
       
       setUndesirablesList(prevList => {
         // Don't add duplicates
-        if (prevList.some(item => item.tiktokId === userId)) {
+        if (prevList.some(item => item.uniqueId === user.uniqueId || item.tiktokId === user.uniqueId)) {
           return prevList
         }
         
@@ -679,7 +686,7 @@ function App() {
     
     // Remove from friends if present
     setFriendsList(prevList => {
-      const newList = prevList.filter(item => item.tiktokId !== userId)
+      const newList = prevList.filter(item => !(item.uniqueId === user.uniqueId || item.tiktokId === user.uniqueId))
       localStorage.setItem('friendsList', JSON.stringify(newList))
       return newList
     })
@@ -687,13 +694,13 @@ function App() {
     loadUserLists();
 
     // Update the userStatus for all existing chat messages
-    updateChatMessagesStatus(userId, {isFriend: false, isUndesirable: true})
+    updateChatMessagesStatus(user.uniqueId, {isFriend: false, isUndesirable: true})
   }
   
   // Remove user from friends list
-  const removeFriend = async (userId) => {
+  const removeFriend = async (uniqueId) => {
     try {
-      const response = await UserApi.removeFriend(userId)
+      const response = await UserApi.removeFriend(uniqueId)
       // API now directly returns the updated array
       setFriendsList(response || [])
     } catch (error) {
@@ -701,7 +708,7 @@ function App() {
       
       // Fallback - remove locally
       setFriendsList(prevList => {
-        const newList = prevList.filter(item => item.tiktokId !== userId)
+        const newList = prevList.filter(item => !(item.uniqueId === uniqueId || item.tiktokId === uniqueId))
         localStorage.setItem('friendsList', JSON.stringify(newList))
         return newList
       })
@@ -710,13 +717,13 @@ function App() {
     loadUserLists();
 
     // Update the userStatus for all existing chat messages
-    updateChatMessagesStatus(userId, {isFriend: false, isUndesirable: false})
+    updateChatMessagesStatus(uniqueId, {isFriend: false, isUndesirable: false})
   }
   
   // Remove user from undesirables list
-  const removeUndesirable = async (userId) => {
+  const removeUndesirable = async (uniqueId) => {
     try {
-      const response = await UserApi.removeUndesirable(userId)
+      const response = await UserApi.removeUndesirable(uniqueId)
       // API now directly returns the updated array
       setUndesirablesList(response || [])
     } catch (error) {
@@ -724,7 +731,7 @@ function App() {
       
       // Fallback - remove locally
       setUndesirablesList(prevList => {
-        const newList = prevList.filter(item => item.tiktokId !== userId)
+        const newList = prevList.filter(item => !(item.uniqueId === uniqueId || item.tiktokId === uniqueId))
         localStorage.setItem('undesirablesList', JSON.stringify(newList))
         return newList
       })
@@ -733,14 +740,14 @@ function App() {
     loadUserLists();
 
     // Update the userStatus for all existing chat messages
-    updateChatMessagesStatus(userId, {isFriend: false, isUndesirable: false})
+    updateChatMessagesStatus(uniqueId, {isFriend: false, isUndesirable: false})
   }
   
   // New helper function to update the userStatus for all existing chat messages
-  const updateChatMessagesStatus = (userId, newStatus) => {
+  const updateChatMessagesStatus = (uniqueId, newStatus) => {
     setChatMessages(prevMessages => {
       return prevMessages.map(msg => {
-        if (msg.uniqueId === userId) {
+        if (msg.uniqueId === uniqueId) {
           return { ...msg, userStatus: newStatus }
         }
         return msg
@@ -749,20 +756,25 @@ function App() {
 
     // Also update mazic list if needed
     setMazicList(prevList => {
-      return [...prevList] // Create a new array to trigger re-render
+      return prevList.map(item => {
+        if (item.uniqueId === uniqueId) {
+          return { ...item, userStatus: newStatus }
+        }
+        return item
+      })
     })
 
     // Also update likes array for top likers
     setLikes(prevLikes => {
       return prevLikes.map(liker => {
-        if (liker.uniqueId === userId) {
+        if (liker.uniqueId === uniqueId) {
           return { ...liker, userStatus: newStatus }
         }
         return liker
       })
     })
 
-    console.log(`User ${userId} status updated across the app: ${JSON.stringify(newStatus)}`)
+    console.log(`User ${uniqueId} status updated across the app: ${JSON.stringify(newStatus)}`)
   }
   
   // Toggle user lists panel
@@ -1012,6 +1024,8 @@ function App() {
                 setUsername={setUsername}
                 connect={connect}
                 isConnecting={isConnecting}
+                sessionId={sessionId}
+                setSessionId={setSessionId}
                 error={error}
               />
               
