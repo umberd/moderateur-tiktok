@@ -22,6 +22,8 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef,openaiApiKey }) 
   const [selectedQuality, setSelectedQuality] = useState('HD1'); // Default quality
   const [silenceThreshold, setSilenceThreshold] = useState(0.05);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [isMuted, setIsMuted] = useState(false); // New state for tracking mute status
+  const gainNodeRef = useRef(null); // Reference to gain node for custom volume control
 
   const [promptList, setPromptList] = useState('');
 
@@ -182,13 +184,24 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef,openaiApiKey }) 
       // Create analyzer node for volume visualization
       const analyser = audioContextRef.current.createAnalyser();
       analyser.fftSize = 256;
-      audioSourceRef.current.connect(analyser);
       
-      // Connect to destination (speakers) so we can still hear it
-      analyser.connect(audioContextRef.current.destination);
+      // Create gain node for mute control
+      const gainNode = audioContextRef.current.createGain();
+      gainNode.gain.value = 1.0; // Full volume by default
+      gainNodeRef.current = gainNode;
+      
+      // Connect the nodes: source -> analyser -> gain -> destination
+      audioSourceRef.current.connect(analyser);
+      analyser.connect(gainNode);
+      gainNode.connect(audioContextRef.current.destination);
       
       // Store the analyser
       audioAnalyserRef.current = analyser;
+      
+      // Add event listener to video element to capture mute button clicks
+      if (videoPlayerRef.current) {
+        videoPlayerRef.current.addEventListener('volumechange', handleVolumeChange);
+      }
       
       console.log('Audio capture initialized');
     } catch (error) {
@@ -196,12 +209,60 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef,openaiApiKey }) 
     }
   };
   
+  const handleVolumeChange = () => {
+    // Check if video is muted by user
+    if (videoPlayerRef.current && videoPlayerRef.current.muted) {
+      // Unmute the actual video element (so audio data still flows)
+      videoPlayerRef.current.muted = false;
+      
+      // But set our gain node to 0 (silent)
+      if (gainNodeRef.current) {
+        gainNodeRef.current.gain.value = 0;
+      }
+      
+      setIsMuted(true);
+    } else if (videoPlayerRef.current && !videoPlayerRef.current.muted && isMuted) {
+      // User unmuted, restore volume through gain node
+      if (gainNodeRef.current) {
+        gainNodeRef.current.gain.value = videoPlayerRef.current.volume;
+      }
+      
+      setIsMuted(false);
+    } else if (videoPlayerRef.current && !videoPlayerRef.current.muted && !isMuted) {
+      // Just a volume change, update gain node
+      if (gainNodeRef.current) {
+        gainNodeRef.current.gain.value = videoPlayerRef.current.volume;
+      }
+    }
+  };
+  
+  // Toggle mute function for custom mute button
+  const toggleMute = () => {
+    if (!videoPlayerRef.current || !gainNodeRef.current) return;
+    
+    if (isMuted) {
+      // Unmute: Restore gain
+      gainNodeRef.current.gain.value = videoPlayerRef.current.volume || 1.0;
+    } else {
+      // Mute: Set gain to 0
+      gainNodeRef.current.gain.value = 0;
+    }
+    
+    setIsMuted(!isMuted);
+  };
+  
   const destroyAudioCapture = () => {
+    // Remove event listener
+    if (videoPlayerRef.current) {
+      videoPlayerRef.current.removeEventListener('volumechange', handleVolumeChange);
+    }
+    
     if (audioContextRef.current) {
       audioContextRef.current.close().catch(console.error);
       audioContextRef.current = null;
       audioSourceRef.current = null;
       audioAnalyserRef.current = null;
+      gainNodeRef.current = null;
     }
   };
   
@@ -572,6 +633,41 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef,openaiApiKey }) 
               ))}
             </select>
             )}
+            
+            {/* Custom mute button */}
+            <button
+              onClick={toggleMute}
+              className="px-3 py-1 bg-gray-600/80 text-white rounded-lg text-sm hover:bg-gray-600 flex items-center"
+              title={isMuted ? "Unmute" : "Mute"}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {isMuted ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                    stroke="currentColor"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                    stroke="currentColor"
+                  />
+                )}
+              </svg>
+              {isMuted ? "Unmute" : "Mute"}
+            </button>
+            
             {!isRecording ? (
               <button
                 onClick={startRecording}
