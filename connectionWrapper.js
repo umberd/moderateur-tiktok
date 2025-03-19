@@ -19,7 +19,7 @@ class TikTokConnectionWrapper extends EventEmitter {
         this.reconnectCount = 0;
         this.reconnectWaitMs = 1000;
         this.maxReconnectAttempts = 5;
-        //options.sessionId='';  //add to frontend
+        //options.sessionId='';
 
         this.connection = new WebcastPushConnection(uniqueId, options);
 

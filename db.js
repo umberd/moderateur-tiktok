@@ -7,7 +7,6 @@ const dataDir = path.join(process.resourcesPath || __dirname, 'data');
 if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir);
 }
-
 // Create database connection
 const dbPath = path.join(dataDir, 'tiktok_chat.db');
 const db = new sqlite3.Database(dbPath);

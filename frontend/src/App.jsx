@@ -490,6 +490,7 @@ function App() {
       // Show notification if the user is a friend or undesirable
       if (userStatus.isFriend || userStatus.isUndesirable) {
         showUserJoinNotification(data, userStatus);
+        playFlaggedCommentSound();
       }
       
       setChatMessages(prevMessages => {

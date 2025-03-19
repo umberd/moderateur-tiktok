@@ -449,7 +449,6 @@ const VideoPlayer = ({ username, enableFlvStream, connectionRef,openaiApiKey }) 
             controls 
             autoPlay 
             className="w-full h-full rounded-xl"
-            poster="/video-loading.jpg"
           />
           
           {isLoading && (

@@ -34,7 +34,7 @@ const TopLikers = ({ likers }) => {
           </div>
         ) : (
           <div className="divide-y divide-gray-800">
-            {sortedLikers.slice(0, 10).map((liker, index) => (
+            {sortedLikers.map((liker, index) => (
               <div 
                 key={liker.uniqueId} 
                 className={`flex items-center justify-between px-4 py-3 transition-colors ${
