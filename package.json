@@ -21,12 +21,16 @@
         "from": "data/",
         "to": "data/",
         "filter": [
-          "tiktok_chat.db"
+          "user_database.db"
         ]
       },
       {
         "from": "public/",
         "to": "public/"
+      },
+      {
+        "from": "frontend/",
+        "to": "frontend/"
       },
       {
         "from": ".env",

@@ -160,7 +160,6 @@ const UserDataDisplay = ({ message, size = 'normal', showNickname = true }) => {
     return size === 'small' ? 'https://placehold.co/20x20?text=?' : 'https://placehold.co/32x32?text=?';
   };
 
-  console.log(message)
 
   return (
     <div className="relative inline-flex items-center">
