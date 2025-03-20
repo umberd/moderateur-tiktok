@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import UserDataDisplay from './UserDataDisplay'
 
 const ChatMessage = ({ 
   message, 
@@ -72,24 +73,15 @@ const ChatMessage = ({
         onMouseEnter={() => setShowActions(true)}
         onMouseLeave={() => setShowActions(false)}
       >
-        <div className="px-3 py-1.5 rounded-full bg-gray-800/40 border border-gray-700/30 text-sm text-gray-300 flex items-center">
-          <img 
-            className="w-5 h-5 rounded-full mr-2 object-cover" 
-            src={message.profilePictureUrl} 
-            alt="" 
-            onError={(e) => { e.target.src = 'https://placehold.co/20x20?text=?' }}
-          />
-          <a 
-              href={`https://www.tiktok.com/@${message.uniqueId}`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className={`font-bold ${textColor} hover:underline transition-colors mr-2`}
-            >
-              {message.nickname}
-            </a>
-            
-          <span><span className="text-xs text-gray-500">{formatTimestamp(message.timestamp)}</span> à rejoint le chat</span>
+        <div className="py-1.5 text-sm flex justify-between items-center">
+          <UserDataDisplay message={message} />
+      
+          <span className="text-xs text-gray-500 ml-2">
+            {formatTimestamp(message.timestamp)}
+          </span>
         </div>
+
+        
         
         {/* User Actions */}
         <div className={`absolute -right-1 -top-1 transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
@@ -173,129 +165,98 @@ const ChatMessage = ({
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      <div className="flex">
-        <img
-          className={`w-8 h-8 rounded-full mr-3 object-cover border-2 ${
-            message?.userStatus?.isFriend
-              ? "border-emerald-500/30"
-              : message?.userStatus?.isUndesirable
-              ? "border-rose-500/30"
-              : "border-gray-700/50"
-          }`}
-          src={message.profilePictureUrl}
-          alt=""
-          onError={(e) => {
-            e.target.src = "https://placehold.co/32x32?text=?";
-          }}
-        />
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline">
-            <a
-              href={`https://www.tiktok.com/@${message.uniqueId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`font-bold ${textColor} hover:underline transition-colors mr-2`}
-            >
-              {message.nickname}
-            </a>
-            <span className="text-xs text-gray-500">
-              {formatTimestamp(message.timestamp)}
-            </span>
-          </div>
-
-          <p className="text-white/90 bg-black/50 p-2 rounded-lg break-words mt-1">
-            <p>{message.comment}</p>
-            {showModeration && message.moderation == undefined && (
-            //spinning wheel
-            <div className="absolute bottom-2 right-2">
-              <div className="w-4 h-4 border-t-2 border-b-2 border-red-900 rounded-full animate-spin"></div>
-            </div>
-          )}
-
-          {showModeration && message.moderation && (
-            <>
-              {/* Status indicator circle in lower-right corner */}
-              <div className="absolute bottom-2 right-2">
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    message.moderation.flagged
-                      ? "bg-rose-500"
-                      : "bg-emerald-500"
-                  }`}
-                  title={
-                    message.moderation.flagged
-                      ? "Flagged Content"
-                      : "Safe Content"
-                  }
-                ></div>
-              </div>
-
-            </>
-          )}
-
-          </p>
-
-          {/* Moderation Results */}
-
-          
-
-          {showModeration && message.moderation && (
-            <>
-              {message.moderation.flagged && message.moderation.categories && (
-                <div className="flex flex-wrap gap-1.5 mt-1.5">
-                  {Object.entries(message.moderation.categories).map(
-                    ([category, isFlagged]) =>
-                      isFlagged && (
-                        <span
-                          key={category}
-                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-900/70 text-rose-300 border border-rose-500/30"
-                        >
-                          {translateCategory(category)}
-                        </span>
-                      )
-                  )}
-                </div>
-              )}
-            </>
-          )}
-
-          {/* AI Response */}
-          {showAIResponses && 
-          message.comment.startsWith("Bot") && 
-          (
-            <div className="mt-2">
-              {message.pendingResponse ? (
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 text-sm animate-pulse">
-                  <div className="h-3 w-3 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
-                  <span>AI is generating a response...</span>
-                </div>
-              ) : message.suggestedResponse ? (
-                <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                  <p className="text-xs font-medium text-indigo-400 mb-1 flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-3.5 w-3.5 mr-1"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    AI RESPONSE
-                  </p>
-                  <p className="text-sm text-white/80 italic">
-                    {message.suggestedResponse}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-          )}
+      {/* Header with user info and timestamp */}
+      <div className="flex justify-between items-center mb-1.5">
+        <div className="flex items-center">
+          <UserDataDisplay message={message} />
         </div>
+        <span className="text-xs text-gray-500 ml-2">
+          {formatTimestamp(message.timestamp)}
+        </span>
       </div>
+
+      {/* Message content */}
+      <div className="text-white/90 bg-black/50 p-2.5 rounded-lg break-words mt-0.5">
+        {message.comment}
+        
+        {/* Moderation indicator */}
+        {showModeration && message.moderation == undefined && (
+          <div className="absolute bottom-2 right-2">
+            <div className="w-4 h-4 border-t-2 border-b-2 border-red-900 rounded-full animate-spin"></div>
+          </div>
+        )}
+
+        {showModeration && message.moderation && (
+          <div className="absolute bottom-2 right-2">
+            <div
+              className={`w-3 h-3 rounded-full ${
+                message.moderation.flagged
+                  ? "bg-rose-500"
+                  : "bg-emerald-500"
+              }`}
+              title={
+                message.moderation.flagged
+                  ? "Flagged Content"
+                  : "Safe Content"
+              }
+            ></div>
+          </div>
+        )}
+      </div>
+
+      {/* Moderation Results */}
+      {showModeration && message.moderation && (
+        <>
+          {message.moderation.flagged && message.moderation.categories && (
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {Object.entries(message.moderation.categories).map(
+                ([category, isFlagged]) =>
+                  isFlagged && (
+                    <span
+                      key={category}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-900/70 text-rose-300 border border-rose-500/30"
+                    >
+                      {translateCategory(category)} {message.moderation.score}
+                    </span>
+                  )
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* AI Response */}
+      {showAIResponses && message.comment.startsWith("Bot") && (
+        <div className="mt-2">
+          {message.pendingResponse ? (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 text-sm animate-pulse">
+              <div className="h-3 w-3 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
+              <span>AI is generating a response...</span>
+            </div>
+          ) : message.suggestedResponse ? (
+            <div className="p-2.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+              <p className="text-xs font-medium text-indigo-400 mb-1 flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3.5 w-3.5 mr-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                AI RESPONSE
+              </p>
+              <p className="text-sm text-white/80 italic">
+                {message.suggestedResponse}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      )}
 
       {/* User Actions */}
       <div

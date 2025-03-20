@@ -341,11 +341,23 @@ function App() {
           return updatedLikes;
         } else {
           // User doesn't exist, add them to the likes array
+
+          //message.followInfo example
+  //followInfo: {followingCount: 1401, followerCount: 409, followStatus: 0, pushStatus: 0}
+
+  //user description example
+  //message.userDetails.bioDescription="..."
+
+  //message.followRole
+  //message.gifterLevel
+  //message.isModerator
+  //message.isSubscriber
+  //message.teamMemberLevel
+  //message.userStatus: {isFriend: false, isUndesirable: false}
           return [...prevLikes, {
-            uniqueId: data.uniqueId,
-            nickname: data.nickname,
-            likeCount: data.likeCount,
+            ...data,
             userStatus
+
           }];
         }
       });
@@ -841,7 +853,7 @@ function App() {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(`${data.uniqueId} vous a mentionné`, {
         body: data.comment,
-        icon: '/favicon.ico'
+        icon: data.profilePictureUrl
       });
     }
   }
@@ -854,8 +866,10 @@ function App() {
   // Function to request browser notification permission
   const requestNotificationPermission = () => {
     if ('Notification' in window) {
-      Notification.requestPermission().then(() => {
+      Notification.requestPermission().then((permission) => {
         // Permission handled
+        console.log("Notification permission requested");
+        console.log(permission);
       });
     }
   }
@@ -896,7 +910,8 @@ function App() {
     // Try to show browser notification if permission is granted
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(`${userType} ${data.nickname} a rejoint`, {
-        body: `${data.nickname} a rejoint le stream`
+        body: `${data.nickname} a rejoint le stream`,
+        icon: data.profilePictureUrl
       });
     }
   }
