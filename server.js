@@ -302,6 +302,12 @@ Si le commentaire est faux, contredit le.
 Essaye de reconnaitre le sarcasme et la critique des religions.
 Defends la declaration universelle des droits de l'homme, le progressisme.
 Tu combats les discriminations, les racismes, les sexismes, les agissements de nature homophobe, transphobe, etc.
+Tu peux tout faire avec les outils.
+Cherche sur internet si tu ne sais pas répondre.
+Execute du code js a chaque fois que tu as basoin.
+utilise l'outil execute_js_code pour executer du code js pour avoir l'heure, la date, ou tout ce que tu as besoin.
+Fais des réponses concises et courtes.
+Ne cites jamais les sources de 
 `;
 
 // Function to generate a suggested response using Ollama
@@ -354,11 +360,21 @@ function removeThinkingContent(text) {
     return processed.trim();
 }
 
+const callFunction = async (name, args) => {
+    console.log('callFunction');
+    console.log(name);
+    console.log(args);
+    if(name === 'execute_js_code'){
+        return eval(args.code);
+    }
+
+    return 'Error executing function';
+};
+
 // Function to generate a suggested response using GPT-4o-mini
 async function generateResponseWithOpenAI(text, apiKey = null) {
     try {
         // Use provided API key or fall back to environment variable
-        console.log(apiKey);
         const openaiClient = apiKey ? 
             new OpenAI({ apiKey }) : 
             openai;
@@ -373,6 +389,17 @@ async function generateResponseWithOpenAI(text, apiKey = null) {
         //     temperature: 0.7,
         // });
 
+        const input = [];
+        input.push({
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: text,
+            },
+          ],
+        });
+
         const response = await openaiClient.responses.create({
             model: "gpt-4o",
             tools: [{ 
@@ -383,14 +410,58 @@ async function generateResponseWithOpenAI(text, apiKey = null) {
                     city: "Paris",
                     region: "Paris"
                 },
-                search_context_size: "low",
+                search_context_size: "high",
+            },{
+                type: "function",
+                name: "execute_js_code",
+                description: "Execute js code and return the result",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        code: {
+                            type: "string",
+                            description: "The js code to execute",
+                        }
+                    },
+                    required: ["code"],
+                },
             }],
-            tool_choice: "required",
+            tool_choice: "auto",
             instructions: systemPrompt,
-            input: text,
+            input: input,
+            max_output_tokens: 100,
         });
+
+        let hasFunctionCall=false;
+
+        for (const toolCall of response.output) {
+            if (toolCall.type !== "function_call") {
+                continue;
+            }
+            hasFunctionCall=true;
+            const name = toolCall.name;
+            const args = JSON.parse(toolCall.arguments);
+            input.push(toolCall);
         
-        return response.output_text;
+            const result = await callFunction(name, args);
+            input.push({
+                type: "function_call_output",
+                call_id: toolCall.call_id,
+                output: result.toString()
+            });
+        }
+        
+        if(!hasFunctionCall){
+            return response;
+        }else{
+            const response = await openaiClient.responses.create({
+                model: "gpt-4o",
+                input: input,
+                instructions: systemPrompt,
+                max_output_tokens: 100,
+            });
+            return response;
+        }
     } catch (error) {
         console.error('Error generating response with OpenAI:', error);
         return null;
@@ -736,3 +807,22 @@ const port = 8081;
 httpServer.listen(port);
 console.log(process.resourcesPath || __dirname);
 console.info(`Server running! Please visit http://localhost:${port}`);
+
+// usage object example
+// {
+//     input_tokens: 670,
+//     input_tokens_details: { cached_tokens: 0 },
+//     output_tokens: 99,
+//     output_tokens_details: { reasoning_tokens: 0 },
+//     total_tokens: 769
+//   }
+
+const calculateCost=async(usage)=>{
+    const cost=usage.input_tokens*0.0000000000015 + usage.output_tokens*0.000000000006;
+    return cost;
+}
+
+
+
+//test("Quelle heure est il?");
+//test("Quelle est la meteo à Ales? genere un simple rapport la date et le temps avec des emoji.");
