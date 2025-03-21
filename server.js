@@ -306,6 +306,9 @@ Tu peux tout faire avec les outils.
 Cherche sur internet si tu ne sais pas répondre.
 Execute du code js a chaque fois que tu as basoin.
 utilise l'outil execute_js_code pour executer du code js pour avoir l'heure, la date, ou tout ce que tu as besoin.
+utilise l'outil get_chat_messages pour avoir les messages du chat pour répondre aà des questions sur le chat, le live.
+Tu peux donner la liste exacte des utilisateurs présents dans le chat.
+Tu peux répéter et analyser les messages du chat pour donner des statistiques, des explications...
 Fais des réponses concises et courtes.
 Ne cites jamais les sources de 
 `;
@@ -367,6 +370,10 @@ const callFunction = async (name, args) => {
     if(name === 'execute_js_code'){
         return eval(args.code);
     }
+    if(name === 'get_chat_messages'){
+        console.log('get_chat_messages');
+        return chatMessages;
+    }
 
     return 'Error executing function';
 };
@@ -425,11 +432,28 @@ async function generateResponseWithOpenAI(text, apiKey = null) {
                     },
                     required: ["code"],
                 },
+            },{
+                type: "function",
+                name: "get_chat_messages",
+                description: "Get the chat messages to answer questions about the chat, the live",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        number: {
+                            type: "number",
+                            description: "The number of messages to return. 0 for all messages",
+                        },
+                        search: {
+                            type: "string",
+                            description: "The search query. If empty, return all messages",
+                        }
+                    },
+                    required: ["number", "search"],
+                },
             }],
             tool_choice: "auto",
             instructions: systemPrompt,
-            input: input,
-            max_output_tokens: 100,
+            input: input
         });
 
         let hasFunctionCall=false;
@@ -444,22 +468,28 @@ async function generateResponseWithOpenAI(text, apiKey = null) {
             input.push(toolCall);
         
             const result = await callFunction(name, args);
+            console.log('function call');
+            //console.log(JSON.stringify(result));
             input.push({
                 type: "function_call_output",
                 call_id: toolCall.call_id,
-                output: result.toString()
+                output: JSON.stringify(result)
             });
         }
         
         if(!hasFunctionCall){
+            console.log('no function call');
+            console.log(response.output_text);
             return response.output_text;
         }else{
+            //console.log(input);
             const response = await openaiClient.responses.create({
                 model: "gpt-4o",
                 input: input,
-                instructions: systemPrompt,
-                max_output_tokens: 100,
+                instructions: systemPrompt
             });
+            
+            //console.log(response.output_text);
             return response.output_text;
         }
     } catch (error) {
@@ -500,7 +530,7 @@ io.on('connection', (socket) => {
         // Send an empty array if there's an error
         socket.emit('ollamaModels', []);
     });
-
+    chatMessages=[];
     socket.on('setUniqueId', (uniqueId, options) => {
 
         // Prohibit the client from specifying these options (for security reasons)
@@ -578,6 +608,12 @@ io.on('connection', (socket) => {
             // Send message immediately
             const initialMsg = { ...msg,timestamp:new Date(), pendingModeration: true, pendingResponse: true };
             socket.emit('chat', initialMsg);
+
+            chatMessages.push({
+              timestamp: new Date(),
+              nickname: msg.nickname,
+              comment: msg.comment,
+            });
             
             // Apply moderation to comment based on provider
             if (msg.comment) {   
