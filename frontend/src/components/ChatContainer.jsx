@@ -14,10 +14,43 @@ const ChatContainer = ({
   const [search, setSearch] = useState('')
   const [showJoinMessages, setShowJoinMessages] = useState(true)
   
+  // Custom smooth scroll function with longer duration
+  const smoothScrollToBottom = (duration = 600) => {
+    const element = chatContainerRef.current
+    if (!element) return
+    
+    const targetPosition = element.scrollHeight
+    const startPosition = element.scrollTop
+    const distance = targetPosition - startPosition
+    let startTime = null
+    
+    const animation = currentTime => {
+      if (!startTime) startTime = currentTime
+      const timeElapsed = currentTime - startTime
+      const progress = Math.min(timeElapsed / duration, 1)
+      
+      // Using the same cubic-bezier as the message animation for consistency
+      const easeCubicBezier = t => {
+        // This approximates cubic-bezier(0.175, 0.885, 0.32, 1.275)
+        return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1
+      }
+      
+      const ease = easeCubicBezier(progress)
+      
+      element.scrollTop = startPosition + distance * ease
+      
+      if (timeElapsed < duration) {
+        requestAnimationFrame(animation)
+      }
+    }
+    
+    requestAnimationFrame(animation)
+  }
+  
   // Auto-scroll chat when new messages arrive
   useEffect(() => {
     if (chatContainerRef.current && autoScroll) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+      smoothScrollToBottom()
     }
   }, [chatMessages, autoScroll])
   
@@ -106,6 +139,24 @@ const ChatContainer = ({
   
   return (
     <div className="flex flex-col h-[600px] lg:h-[700px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-900/70 backdrop-blur-sm shadow-xl">
+      <style>
+        {`
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(-100px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          .message-animation {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
+          }
+        `}
+      </style>
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700">
         <h3 className="text-lg font-bold text-white flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-pink-500" viewBox="0 0 20 20" fill="currentColor">
@@ -155,17 +206,19 @@ const ChatContainer = ({
         ) : (
           <div className="space-y-2">
             {filteredMessages.map((msg, index) => (
-              <ChatMessage 
-                key={`msg-${index}-${ index}`}
-                message={msg}
-                showModeration={showModeration}
-                showAIResponses={showAIResponses}
-                addToFriendsList={addToFriendsList}
-                addToUndesirablesList={addToUndesirablesList}
-              />
+              <div 
+                key={`msg-${index}-${index}`}
+                className="message-animation"
+              >
+                <ChatMessage 
+                  message={msg}
+                  showModeration={showModeration}
+                  showAIResponses={showAIResponses}
+                  addToFriendsList={addToFriendsList}
+                  addToUndesirablesList={addToUndesirablesList}
+                />
+              </div>
             ))}
-            
-            
           </div>
         )}
       </div>
@@ -185,7 +238,7 @@ const ChatContainer = ({
                     
                     // If auto-scroll was just re-enabled, scroll to bottom
                     if (e.target.checked && chatContainerRef.current) {
-                      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                      smoothScrollToBottom();
                     }
                   }} 
                 />
@@ -230,7 +283,7 @@ const ChatContainer = ({
               className="flex items-center bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 focus:ring-offset-gray-800"
               onClick={() => {
                 if (chatContainerRef.current) {
-                  chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                  smoothScrollToBottom();
                 }
               }}
             >

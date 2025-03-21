@@ -91,7 +91,7 @@ async function moderateText(text, apiKey = null) {
             openai;
             
         const response = await openaiClient.moderations.create({
-            model: "text-moderation-latest",
+            model: "omni-moderation-latest",
             input: text,
         });
         
@@ -195,8 +195,8 @@ async function generateResponseModeration(text, apiKey = null,moderatePrompt) {
                 { role: "system", content: moderatePrompt },
                 { role: "user", content: text }
             ],
-            max_tokens: 100,
-            temperature: 0.7,
+            max_tokens: 300,
+            temperature: 0.1,
         });
         
         return response.choices[0].message.content;
@@ -267,6 +267,7 @@ Please respond in XML format using these tags and only these tags:
                 wierd_joke: reason.includes('wierd joke'),
                 conspiracy: reason.includes('conspiracy'),
                 racism: reason.includes('racism'),
+                other: reason,
             },
             category_scores: {
                 harassment: reason.includes('harassment') ? score : 0,
@@ -279,6 +280,7 @@ Please respond in XML format using these tags and only these tags:
                 wierd_joke: reason.includes('wierd joke') ? score : 0,
                 conspiracy: reason.includes('conspiracy') ? score : 0,
                 racism: reason.includes('racism') ? score : 0,
+                other: reason ? score : 0,
             },
             ollama_reason: reason
         };
@@ -290,6 +292,7 @@ Please respond in XML format using these tags and only these tags:
 
 const systemPrompt = `
 Vous êtes un assistant qui réponds au chat en direct TikTok.
+Vous repondez uniquement en Markdown.
 Vous recevrez des commentaires du chat provenant du canal en direct. Pour chaque nouvelle mise à jour du chat, vous repondrez.
 Pour le nom d'utilisateur, assurez-vous de le dire d'une façon facile à prononcer.
 Pour les smileys ou les emojis, prononce les simplement. un seul par message, sinon, c'est trop long.
@@ -300,6 +303,20 @@ Si le commentaire est faux, contredit le.
 Essaye de reconnaitre le sarcasme et la critique des religions.
 Defends la declaration universelle des droits de l'homme, le progressisme.
 Tu combats les discriminations, les racismes, les sexismes, les agissements de nature homophobe, transphobe, etc.
+Tu peux tout faire avec les outils.
+Cherche sur internet si tu ne sais pas répondre.
+Execute du code js a chaque fois que tu as basoin.
+utilise l'outil execute_js_code pour executer du code js pour avoir l'heure, la date, ou tout ce que tu as besoin.
+utilise l'outil get_chat_messages pour avoir les messages du chat pour répondre aà des questions sur le chat, le live.
+Tu peux donner la liste exacte des utilisateurs présents dans le chat.
+Tu peux répéter et analyser les messages du chat pour donner des statistiques, des explications...
+Fais des réponses concises et courtes.
+Tu peux chercher des images sur internet pour illustrer tes réponses.
+tu peux tout chercher sur internet.
+Ne cites jamais les sources.
+Pour le LaTeX, utilise le format suivant : $E=mc^2$ for inline or $$\frac{d}{dx}e^x = e^x$$ for block.
+Réponds en Markdownd.
+Répond en MD.
 `;
 
 // Function to generate a suggested response using Ollama
@@ -352,6 +369,21 @@ function removeThinkingContent(text) {
     return processed.trim();
 }
 
+const callFunction = async (name, args) => {
+    console.log('callFunction');
+    console.log(name);
+    console.log(args);
+    if(name === 'execute_js_code'){
+        return eval(args.code);
+    }
+    if(name === 'get_chat_messages'){
+        console.log('get_chat_messages');
+        return chatMessages;
+    }
+
+    return 'Error executing function';
+};
+
 // Function to generate a suggested response using GPT-4o-mini
 async function generateResponseWithOpenAI(text, apiKey = null) {
     try {
@@ -360,17 +392,112 @@ async function generateResponseWithOpenAI(text, apiKey = null) {
             new OpenAI({ apiKey }) : 
             openai;
             
-        const response = await openaiClient.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: text }
-            ],
-            max_tokens: 100,
-            temperature: 0.7,
+        // const response = await openaiClient.chat.completions.create({
+        //     model: "gpt-4o-mini",
+        //     messages: [
+        //         { role: "system", content: systemPrompt },
+        //         { role: "user", content: text }
+        //     ],
+        //     max_tokens: 200,
+        //     temperature: 0.7,
+        // });
+
+        const input = [];
+        input.push({
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: text,
+            },
+          ],
         });
+
+        const response = await openaiClient.responses.create({
+            model: "gpt-4o",
+            tools: [{ 
+                type: "web_search_preview" ,
+                user_location: {
+                    type: "approximate",
+                    country: "FR",
+                    city: "Paris",
+                    region: "Paris"
+                },
+                search_context_size: "high",
+            },{
+                type: "function",
+                name: "execute_js_code",
+                description: "Execute js code and return the result",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        code: {
+                            type: "string",
+                            description: "The js code to execute",
+                        }
+                    },
+                    required: ["code"],
+                },
+            },{
+                type: "function",
+                name: "get_chat_messages",
+                description: "Get the chat messages to answer questions about the chat, the live",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        number: {
+                            type: "number",
+                            description: "The number of messages to return. 0 for all messages",
+                        },
+                        search: {
+                            type: "string",
+                            description: "The search query. If empty, return all messages",
+                        }
+                    },
+                    required: ["number", "search"],
+                },
+            }],
+            tool_choice: "auto",
+            instructions: systemPrompt,
+            input: input
+        });
+
+        let hasFunctionCall=false;
+
+        for (const toolCall of response.output) {
+            if (toolCall.type !== "function_call") {
+                continue;
+            }
+            hasFunctionCall=true;
+            const name = toolCall.name;
+            const args = JSON.parse(toolCall.arguments);
+            input.push(toolCall);
         
-        return response.choices[0].message.content;
+            const result = await callFunction(name, args);
+            console.log('function call');
+            //console.log(JSON.stringify(result));
+            input.push({
+                type: "function_call_output",
+                call_id: toolCall.call_id,
+                output: JSON.stringify(result)
+            });
+        }
+        
+        if(!hasFunctionCall){
+            console.log('no function call');
+            console.log(response.output_text);
+            return response.output_text;
+        }else{
+            //console.log(input);
+            const response = await openaiClient.responses.create({
+                model: "gpt-4o",
+                input: input,
+                instructions: systemPrompt
+            });
+            
+            //console.log(response.output_text);
+            return response.output_text;
+        }
     } catch (error) {
         console.error('Error generating response with OpenAI:', error);
         return null;
@@ -409,7 +536,7 @@ io.on('connection', (socket) => {
         // Send an empty array if there's an error
         socket.emit('ollamaModels', []);
     });
-
+    chatMessages=[];
     socket.on('setUniqueId', (uniqueId, options) => {
 
         // Prohibit the client from specifying these options (for security reasons)
@@ -419,7 +546,7 @@ io.on('connection', (socket) => {
             
             // Store AI provider settings in the socket object
             socket.aiProvider = options.aiProvider || 'openai';
-            socket.aiModel = options.aiModel || null;
+            socket.aiModel = options.aiModel;
             
             // Store moderation and response settings
             socket.showModeration = options.showModeration === true;
@@ -472,36 +599,50 @@ io.on('connection', (socket) => {
         tiktokConnectionWrapper.connection.on('roomUser', msg => socket.emit('roomUser', msg));
         tiktokConnectionWrapper.connection.on('member', msg => {
             msg.timestamp=new Date();
+            //console.log(msg);
             socket.emit('member', msg)
         });
+
+        //tiktokConnectionWrapper.connection.sendMessage(`@${options.sessionId} Salut à tous`).catch(err => console.error(err));
+
         
         // Handle chat messages with moderation
         tiktokConnectionWrapper.connection.on('chat', async (msg) => {
+
+
+
             // Send message immediately
             const initialMsg = { ...msg,timestamp:new Date(), pendingModeration: true, pendingResponse: true };
             socket.emit('chat', initialMsg);
+
+            chatMessages.push({
+              timestamp: new Date(),
+              nickname: msg.nickname,
+              comment: msg.comment,
+            });
             
             // Apply moderation to comment based on provider
             if (msg.comment) {   
                 console.log(msg.nickname + ' : ' + msg.comment);             
                 if (socket.showModeration && socket.aiProvider === 'ollama' && socket.aiModel) {
+                    console.log('Moderation with Ollama');
                     const moderationResult = await moderateTextWithOllama(msg.comment, socket.aiModel);
                     if (moderationResult) {
                         msg.moderation = moderationResult;
                         //console.log('Moderation result');
                         
                         // Log flagged content to server console
-                        if (moderationResult.flagged) {
-                            console.log('\nFlagged comment (Ollama):', msg.comment);
-                            console.log('Reason:', moderationResult.ollama_reason);
-                        }
+                        // if (moderationResult.flagged) {
+                        //     console.log('\nFlagged comment (Ollama):', msg.comment);
+                        //     console.log('Reason:', moderationResult.ollama_reason);
+                        // }
                     } else {
                         console.log('No moderation result');
                     }
-                } else if (socket.showModeration && (socket.openaiApiKey || process.env.OPENAI_API_KEY)) {
+                } else if (socket.showModeration && (socket.openaiApiKey )) {
                     //console.log('Moderation with OpenAI');
                     //console.log(msg.comment);
-                    const moderationResult = await moderateText(msg.comment, socket.openaiApiKey || process.env.OPENAI_API_KEY);
+                    const moderationResult = await moderateText(msg.comment, socket.openaiApiKey );
                     //console.log(moderationResult);
                     if (moderationResult) {
                         msg.moderation = moderationResult;
@@ -533,7 +674,7 @@ io.on('connection', (socket) => {
             // Generate a suggested response using the selected provider and model
             try {
                 //console.log(msg);
-                if (socket.showResponses && msg.comment.startsWith("Bot")) {
+                if (socket.showResponses && (msg.comment.startsWith("bot") ||msg.comment.startsWith("Bot") || msg.comment.startsWith("Robot")|| msg.comment.startsWith("robot"))) {
                     //console.log('Generating response');
                     let theMessage=msg.nickname + ' à dit : "' + msg.comment + '"';
                     // if msg comment start with @[username] make nickname à écrit à [username] : comment
@@ -545,7 +686,7 @@ io.on('connection', (socket) => {
                         theMessage, 
                         socket.aiProvider, 
                         socket.aiModel, 
-                        socket.openaiApiKey || process.env.OPENAI_API_KEY
+                        socket.openaiApiKey 
                     );
                     if (suggestedResponse) {
                         msg.suggestedResponse = suggestedResponse;
@@ -574,14 +715,14 @@ io.on('connection', (socket) => {
         tiktokConnectionWrapper.connection.on('subscribe', msg => socket.emit('subscribe', msg));
 
         // Add a new function to handle room state data
-        socket.on('getUserStatus', async (tiktokId) => {
+        socket.on('getUserStatus', async (uniqueId) => {
             try {
                 // Get user's status in lists
-                const isFriend = await db.isUserFriend(tiktokId);
-                const undesirableStatus = await db.isUserUndesirable(tiktokId);
+                const isFriend = await db.isUserFriend(uniqueId);
+                const undesirableStatus = await db.isUserUndesirable(uniqueId);
                 
                 socket.emit('userStatus', {
-                    tiktokId,
+                    uniqueId,
                     isFriend,
                     ...undesirableStatus
                 });
@@ -655,11 +796,11 @@ app.get('/api/users/search', async (req, res) => {
 
 app.post('/api/users/friends', async (req, res) => {
     try {
-        const { tiktokId, nickname } = req.body;
-        if (!tiktokId || !nickname) {
-            return res.status(400).json({ error: 'TikTok ID and nickname are required' });
+        const { uniqueId, userId, nickname, profilePictureUrl } = req.body;
+        if (!uniqueId || !userId || !nickname) {
+            return res.status(400).json({ error: 'uniqueId, userId and nickname are required' });
         }
-        const added = await db.addToFriends(tiktokId, nickname);
+        const added = await db.addToFriends(uniqueId, userId, nickname, profilePictureUrl);
         res.json({ success: true, added });
     } catch (error) {
         console.error('Error adding friend:', error);
@@ -669,11 +810,11 @@ app.post('/api/users/friends', async (req, res) => {
 
 app.post('/api/users/undesirables', async (req, res) => {
     try {
-        const { tiktokId, nickname, reason } = req.body;
-        if (!tiktokId || !nickname) {
-            return res.status(400).json({ error: 'TikTok ID and nickname are required' });
+        const { uniqueId, userId, nickname, reason, profilePictureUrl } = req.body;
+        if (!uniqueId || !userId || !nickname) {
+            return res.status(400).json({ error: 'uniqueId, userId and nickname are required' });
         }
-        const added = await db.addToUndesirables(tiktokId, nickname, reason || '');
+        const added = await db.addToUndesirables(uniqueId, userId, nickname, reason || '', profilePictureUrl);
         res.json({ success: true, added });
     } catch (error) {
         console.error('Error adding undesirable:', error);
@@ -681,10 +822,10 @@ app.post('/api/users/undesirables', async (req, res) => {
     }
 });
 
-app.delete('/api/users/friends/:tiktokId', async (req, res) => {
+app.delete('/api/users/friends/:uniqueId', async (req, res) => {
     try {
-        const { tiktokId } = req.params;
-        const removed = await db.removeFromFriends(tiktokId);
+        const { uniqueId } = req.params;
+        const removed = await db.removeFromFriends(uniqueId);
         res.json({ success: true, removed });
     } catch (error) {
         console.error('Error removing friend:', error);
@@ -692,10 +833,10 @@ app.delete('/api/users/friends/:tiktokId', async (req, res) => {
     }
 });
 
-app.delete('/api/users/undesirables/:tiktokId', async (req, res) => {
+app.delete('/api/users/undesirables/:uniqueId', async (req, res) => {
     try {
-        const { tiktokId } = req.params;
-        const removed = await db.removeFromUndesirables(tiktokId);
+        const { uniqueId } = req.params;
+        const removed = await db.removeFromUndesirables(uniqueId);
         res.json({ success: true, removed });
     } catch (error) {
         console.error('Error removing undesirable:', error);
@@ -708,3 +849,22 @@ const port = 8081;
 httpServer.listen(port);
 console.log(process.resourcesPath || __dirname);
 console.info(`Server running! Please visit http://localhost:${port}`);
+
+// usage object example
+// {
+//     input_tokens: 670,
+//     input_tokens_details: { cached_tokens: 0 },
+//     output_tokens: 99,
+//     output_tokens_details: { reasoning_tokens: 0 },
+//     total_tokens: 769
+//   }
+
+const calculateCost=async(usage)=>{
+    const cost=usage.input_tokens*0.0000000000015 + usage.output_tokens*0.000000000006;
+    return cost;
+}
+
+
+
+//test("Quelle heure est il?");
+//test("Quelle est la meteo à Ales? genere un simple rapport la date et le temps avec des emoji.");

@@ -26,6 +26,7 @@ function App() {
   const [isConnecting, setIsConnecting] = useState(false)
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
+  const [sessionId, setSessionId] = useState('')
 
   const [availableOllamaModels, setAvailableOllamaModels] = useState([])
   
@@ -269,7 +270,8 @@ function App() {
         aiModel,
         showModeration,
         showResponses: showAIResponses,
-        openaiApiKey: aiProvider === 'openai' ? openaiApiKey : undefined
+        openaiApiKey: aiProvider === 'openai' ? openaiApiKey : undefined,
+        sessionId: sessionId
       })
       
       setIsConnected(true)
@@ -339,11 +341,23 @@ function App() {
           return updatedLikes;
         } else {
           // User doesn't exist, add them to the likes array
+
+          //message.followInfo example
+  //followInfo: {followingCount: 1401, followerCount: 409, followStatus: 0, pushStatus: 0}
+
+  //user description example
+  //message.userDetails.bioDescription="..."
+
+  //message.followRole
+  //message.gifterLevel
+  //message.isModerator
+  //message.isSubscriber
+  //message.teamMemberLevel
+  //message.userStatus: {isFriend: false, isUndesirable: false}
           return [...prevLikes, {
-            uniqueId: data.uniqueId,
-            nickname: data.nickname,
-            likeCount: data.likeCount,
+            ...data,
             userStatus
+
           }];
         }
       });
@@ -475,10 +489,10 @@ function App() {
       // Remove after 5 seconds
       setTimeout(() => {
         removeNotification(notification.id)
-      }, 5000)
+      }, 50000)
       
       // Disconnect
-      disconnect()
+      //disconnect()
     })
     
     // Member join
@@ -490,6 +504,7 @@ function App() {
       // Show notification if the user is a friend or undesirable
       if (userStatus.isFriend || userStatus.isUndesirable) {
         showUserJoinNotification(data, userStatus);
+        playFlaggedCommentSound();
       }
       
       setChatMessages(prevMessages => {
@@ -517,17 +532,18 @@ function App() {
   
   const checkUserStatus = (data) => {
     // Check if user is in friends or undesirables list
-    // userId from chat messages will match with tiktokId in our lists
-    //console.log(data)
-    const userId = data.uniqueId;
+    // userId from chat messages will match with uniqueId in our lists
+    const tiktokUsername = data.uniqueId;
 
-    const friendListNow=JSON.parse(localStorage.getItem('friendsList'));
-    const undesirablesListNow=JSON.parse(localStorage.getItem('undesirablesList'));
+    const friendListNow = JSON.parse(localStorage.getItem('friendsList'));
+    const undesirablesListNow = JSON.parse(localStorage.getItem('undesirablesList'));
         
     // Handle both snake_case (from DB) and camelCase (from transformed data)
-    const isFriend = friendListNow.some(friend => friend.tiktokId === userId);
+    const isFriend = friendListNow.some(friend => 
+      friend.uniqueId === tiktokUsername || friend.tiktokId === tiktokUsername);
     
-    const isUndesirable = undesirablesListNow.some(undesirable => undesirable.tiktokId === userId);
+    const isUndesirable = undesirablesListNow.some(undesirable => 
+      undesirable.uniqueId === tiktokUsername || undesirable.tiktokId === tiktokUsername);
 
     return {
       isFriend,
@@ -603,9 +619,9 @@ function App() {
   }
   
   // Add user to friends list
-  const addToFriendsList = async (userId, nickname) => {
+  const addToFriendsList = async (user) => {
     try {
-      const response = await UserApi.addToFriendsList(userId, nickname)
+      const response = await UserApi.addToFriendsList(user)
       // API now directly returns the updated array
       setFriendsList(response || [])
     } catch (error) {
@@ -613,14 +629,16 @@ function App() {
       
       // Fallback - add locally
       const newFriend = {
-        tiktokId: userId,
-        nickname: nickname,
+        uniqueId: user.uniqueId,
+        userId: user.uniqueId, // For backward compatibility, use uniqueId as userId
+        nickname: user.nickname,
+        profilePictureUrl: user.profilePictureUrl,
         addedAt: new Date().toISOString()
       }
       
       setFriendsList(prevList => {
         // Don't add duplicates
-        if (prevList.some(item => item.tiktokId === userId)) {
+        if (prevList.some(item => item.uniqueId === user.uniqueId || item.tiktokId === user.uniqueId)) {
           return prevList
         }
         
@@ -632,25 +650,25 @@ function App() {
     
     // Remove from undesirables if present
     setUndesirablesList(prevList => {
-      const newList = prevList.filter(item => item.tiktokId !== userId)
+      const newList = prevList.filter(item => !(item.uniqueId === user.uniqueId || item.tiktokId === user.uniqueId))
       localStorage.setItem('undesirablesList', JSON.stringify(newList))
       return newList
     })
     loadUserLists();
 
     // Update the userStatus for all existing chat messages
-    updateChatMessagesStatus(userId, {isFriend: true, isUndesirable: false})
+    updateChatMessagesStatus(user.uniqueId, {isFriend: true, isUndesirable: false})
   }
   
   // Add user to undesirables list
-  const addToUndesirablesList = async (userId, nickname, reason = '') => {
+  const addToUndesirablesList = async (user,reason = '') => {
     try {
       if(reason == ""){
         //ask for reason in a input box
          reason = prompt("Enter reason for adding to undesirables list")
       }
-      // Remove the prompt and let the UserLists component handle collecting the reason
-      const response = await UserApi.addToUndesirablesList(userId, nickname, reason)
+      
+      const response = await UserApi.addToUndesirablesList(user,reason)
       // API now directly returns the updated array
       setUndesirablesList(response || [])
     } catch (error) {
@@ -658,15 +676,17 @@ function App() {
       
       // Fallback - add locally
       const newUndesirable = {
-        tiktokId: userId,
-        nickname: nickname,
+        uniqueId: user.uniqueId,
+        userId: user.uniqueId, // For backward compatibility, use uniqueId as userId
+        nickname: user.nickname,
+        profilePictureUrl: user.profilePictureUrl,
         reason: reason,
         addedAt: new Date().toISOString()
       }
       
       setUndesirablesList(prevList => {
         // Don't add duplicates
-        if (prevList.some(item => item.tiktokId === userId)) {
+        if (prevList.some(item => item.uniqueId === user.uniqueId || item.tiktokId === user.uniqueId)) {
           return prevList
         }
         
@@ -678,7 +698,7 @@ function App() {
     
     // Remove from friends if present
     setFriendsList(prevList => {
-      const newList = prevList.filter(item => item.tiktokId !== userId)
+      const newList = prevList.filter(item => !(item.uniqueId === user.uniqueId || item.tiktokId === user.uniqueId))
       localStorage.setItem('friendsList', JSON.stringify(newList))
       return newList
     })
@@ -686,13 +706,13 @@ function App() {
     loadUserLists();
 
     // Update the userStatus for all existing chat messages
-    updateChatMessagesStatus(userId, {isFriend: false, isUndesirable: true})
+    updateChatMessagesStatus(user.uniqueId, {isFriend: false, isUndesirable: true})
   }
   
   // Remove user from friends list
-  const removeFriend = async (userId) => {
+  const removeFriend = async (uniqueId) => {
     try {
-      const response = await UserApi.removeFriend(userId)
+      const response = await UserApi.removeFriend(uniqueId)
       // API now directly returns the updated array
       setFriendsList(response || [])
     } catch (error) {
@@ -700,7 +720,7 @@ function App() {
       
       // Fallback - remove locally
       setFriendsList(prevList => {
-        const newList = prevList.filter(item => item.tiktokId !== userId)
+        const newList = prevList.filter(item => !(item.uniqueId === uniqueId || item.tiktokId === uniqueId))
         localStorage.setItem('friendsList', JSON.stringify(newList))
         return newList
       })
@@ -709,13 +729,13 @@ function App() {
     loadUserLists();
 
     // Update the userStatus for all existing chat messages
-    updateChatMessagesStatus(userId, {isFriend: false, isUndesirable: false})
+    updateChatMessagesStatus(uniqueId, {isFriend: false, isUndesirable: false})
   }
   
   // Remove user from undesirables list
-  const removeUndesirable = async (userId) => {
+  const removeUndesirable = async (uniqueId) => {
     try {
-      const response = await UserApi.removeUndesirable(userId)
+      const response = await UserApi.removeUndesirable(uniqueId)
       // API now directly returns the updated array
       setUndesirablesList(response || [])
     } catch (error) {
@@ -723,7 +743,7 @@ function App() {
       
       // Fallback - remove locally
       setUndesirablesList(prevList => {
-        const newList = prevList.filter(item => item.tiktokId !== userId)
+        const newList = prevList.filter(item => !(item.uniqueId === uniqueId || item.tiktokId === uniqueId))
         localStorage.setItem('undesirablesList', JSON.stringify(newList))
         return newList
       })
@@ -732,14 +752,14 @@ function App() {
     loadUserLists();
 
     // Update the userStatus for all existing chat messages
-    updateChatMessagesStatus(userId, {isFriend: false, isUndesirable: false})
+    updateChatMessagesStatus(uniqueId, {isFriend: false, isUndesirable: false})
   }
   
   // New helper function to update the userStatus for all existing chat messages
-  const updateChatMessagesStatus = (userId, newStatus) => {
+  const updateChatMessagesStatus = (uniqueId, newStatus) => {
     setChatMessages(prevMessages => {
       return prevMessages.map(msg => {
-        if (msg.uniqueId === userId) {
+        if (msg.uniqueId === uniqueId) {
           return { ...msg, userStatus: newStatus }
         }
         return msg
@@ -748,20 +768,25 @@ function App() {
 
     // Also update mazic list if needed
     setMazicList(prevList => {
-      return [...prevList] // Create a new array to trigger re-render
+      return prevList.map(item => {
+        if (item.uniqueId === uniqueId) {
+          return { ...item, userStatus: newStatus }
+        }
+        return item
+      })
     })
 
     // Also update likes array for top likers
     setLikes(prevLikes => {
       return prevLikes.map(liker => {
-        if (liker.uniqueId === userId) {
+        if (liker.uniqueId === uniqueId) {
           return { ...liker, userStatus: newStatus }
         }
         return liker
       })
     })
 
-    console.log(`User ${userId} status updated across the app: ${JSON.stringify(newStatus)}`)
+    console.log(`User ${uniqueId} status updated across the app: ${JSON.stringify(newStatus)}`)
   }
   
   // Toggle user lists panel
@@ -828,7 +853,7 @@ function App() {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(`${data.uniqueId} vous a mentionné`, {
         body: data.comment,
-        icon: '/favicon.ico'
+        icon: data.profilePictureUrl
       });
     }
   }
@@ -841,8 +866,10 @@ function App() {
   // Function to request browser notification permission
   const requestNotificationPermission = () => {
     if ('Notification' in window) {
-      Notification.requestPermission().then(() => {
+      Notification.requestPermission().then((permission) => {
         // Permission handled
+        console.log("Notification permission requested");
+        console.log(permission);
       });
     }
   }
@@ -883,7 +910,8 @@ function App() {
     // Try to show browser notification if permission is granted
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(`${userType} ${data.nickname} a rejoint`, {
-        body: `${data.nickname} a rejoint le stream`
+        body: `${data.nickname} a rejoint le stream`,
+        icon: data.profilePictureUrl
       });
     }
   }
@@ -980,7 +1008,7 @@ function App() {
       {/* Toggle button for user lists */}
       <button 
         id="toggleUserLists" 
-        className="fixed top-4 right-4 z-50 flex items-center bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg shadow-lg transition-colors"
+        className="fixed top-4 left-4 z-50 flex items-center bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg shadow-lg transition-colors"
         onClick={toggleUserLists}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -1011,6 +1039,8 @@ function App() {
                 setUsername={setUsername}
                 connect={connect}
                 isConnecting={isConnecting}
+                sessionId={sessionId}
+                setSessionId={setSessionId}
                 error={error}
               />
               

@@ -1,12 +1,48 @@
+import { useState, useEffect } from 'react';
+
 const ConnectionForm = ({ 
   username, 
   setUsername, 
   connect, 
   isConnecting, 
-  error 
+  error,
+  sessionId,
+  setSessionId
 }) => {
+
+  const [showSessionId, setShowSessionId] = useState(false);
+
+  useEffect(() => {
+    //set username from local storage
+    setUsername(localStorage.getItem('username') || "");
+    setSessionId(localStorage.getItem('sessionId') || "");
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('username', username);
+    localStorage.setItem('sessionId', sessionId);
+  }, [username, sessionId]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Check for Ctrl+K
+      if (event.ctrlKey && event.key === 'k') {
+        event.preventDefault(); // Prevent default browser behavior
+        setShowSessionId(prevState => !prevState);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup event listener on component unmount
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   return (
-    <div className="max-w-md mx-auto flex flex-col gap-5 p-6 bg-gray-800/30 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-700/30">
+    <div className=" mx-auto flex flex-col gap-2 p-6 bg-gray-800/30 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-700/30">
       <div className="flex items-center mb-2">
         <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-pink-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/20">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -31,7 +67,20 @@ const ConnectionForm = ({
           className="w-full pl-8 pr-4 py-3.5 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 shadow-inner focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-all duration-200"
         />
       </div>
-      
+      {showSessionId && (
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <span className="text-gray-400">#</span>
+        </div>
+        <input
+          type="password" 
+          placeholder="session_id (optional)"
+          value={sessionId}
+          onChange={(e) => setSessionId(e.target.value)}
+          className="w-full pl-8 pr-4 py-3.5 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 shadow-inner focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-all duration-200"
+        />
+      </div>
+      )}
       <button 
         onClick={connect} 
         disabled={isConnecting || !username}

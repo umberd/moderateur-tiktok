@@ -7,10 +7,17 @@ const dataDir = path.join(process.resourcesPath || __dirname, 'data');
 if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir);
 }
-
 // Create database connection
-const dbPath = path.join(dataDir, 'tiktok_chat.db');
+const dbPath = path.join(dataDir, 'user_database.db');
 const db = new sqlite3.Database(dbPath);
+
+
+// TikTok API User Schema:
+// userId: unique id of the user
+// uniqueId: unique id of the user (username)
+// nickname: display name of the user
+// profilePictureUrl: profile picture url of the user
+
 
 // Initialize database with required tables
 function initDatabase() {
@@ -19,8 +26,10 @@ function initDatabase() {
             // Create users table
             db.run(`CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tiktok_id TEXT UNIQUE NOT NULL,
+                userId TEXT UNIQUE NOT NULL,
+                uniqueId TEXT UNIQUE NOT NULL,
                 nickname TEXT NOT NULL,
+                profilePictureUrl TEXT,
                 first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )`);
@@ -28,6 +37,7 @@ function initDatabase() {
             // Create friends list
             db.run(`CREATE TABLE IF NOT EXISTS friends (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                uniqueId TEXT UNIQUE NOT NULL,
                 user_id INTEGER NOT NULL,
                 added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id)
@@ -36,6 +46,7 @@ function initDatabase() {
             // Create undesirables list
             db.run(`CREATE TABLE IF NOT EXISTS undesirables (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                uniqueId TEXT UNIQUE NOT NULL,
                 user_id INTEGER NOT NULL,
                 reason TEXT,
                 added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -43,7 +54,7 @@ function initDatabase() {
             )`);
 
             // Create indexes
-            db.run(`CREATE INDEX IF NOT EXISTS idx_users_tiktok_id ON users (tiktok_id)`);
+            db.run(`CREATE INDEX IF NOT EXISTS idx_users_uniqueId ON users (uniqueId)`);
             db.run(`CREATE INDEX IF NOT EXISTS idx_friends_user_id ON friends (user_id)`);
             db.run(`CREATE INDEX IF NOT EXISTS idx_undesirables_user_id ON undesirables (user_id)`);
         }, (err) => {
@@ -57,21 +68,23 @@ function initDatabase() {
 }
 
 // Get or create user
-async function getOrCreateUser(tiktokId, nickname) {
+async function getOrCreateUser(uniqueId, userId, nickname, profilePictureUrl = null) {
     return new Promise((resolve, reject) => {
-        db.get('SELECT * FROM users WHERE tiktok_id = ?', [tiktokId], (err, row) => {
+        db.get('SELECT * FROM users WHERE uniqueId = ?', [uniqueId], (err, row) => {
             if (err) {
                 reject(err);
                 return;
             }
 
             if (row) {
-                // Update last_seen timestamp
-                db.run('UPDATE users SET last_seen = CURRENT_TIMESTAMP, nickname = ? WHERE id = ?', [nickname, row.id]);
+                // Update last_seen timestamp, nickname and profile picture if changed
+                db.run('UPDATE users SET last_seen = CURRENT_TIMESTAMP, nickname = ?, profilePictureUrl = ? WHERE id = ?', 
+                    [nickname, profilePictureUrl, row.id]);
                 resolve(row);
             } else {
                 // Insert new user
-                db.run('INSERT INTO users (tiktok_id, nickname) VALUES (?, ?)', [tiktokId, nickname], function(err) {
+                db.run('INSERT INTO users (uniqueId, userId, nickname, profilePictureUrl) VALUES (?, ?, ?, ?)', 
+                    [uniqueId, userId, nickname, profilePictureUrl], function(err) {
                     if (err) {
                         reject(err);
                         return;
@@ -92,9 +105,9 @@ async function getOrCreateUser(tiktokId, nickname) {
 }
 
 // Add user to friends list
-async function addToFriends(tiktokId, nickname) {
+async function addToFriends(uniqueId, userId, nickname, profilePictureUrl = null) {
     try {
-        const user = await getOrCreateUser(tiktokId, nickname);
+        const user = await getOrCreateUser(uniqueId, userId, nickname, profilePictureUrl);
         
         return new Promise((resolve, reject) => {
             // Check if already in friends list
@@ -112,7 +125,7 @@ async function addToFriends(tiktokId, nickname) {
                     db.run('DELETE FROM undesirables WHERE user_id = ?', [user.id]);
                     
                     // Add to friends
-                    db.run('INSERT INTO friends (user_id) VALUES (?)', [user.id], function(err) {
+                    db.run('INSERT INTO friends (uniqueId, user_id) VALUES (?, ?)', [uniqueId, user.id], function(err) {
                         if (err) {
                             reject(err);
                             return;
@@ -128,9 +141,9 @@ async function addToFriends(tiktokId, nickname) {
 }
 
 // Add user to undesirables list
-async function addToUndesirables(tiktokId, nickname, reason = '') {
+async function addToUndesirables(uniqueId, userId, nickname, reason = '', profilePictureUrl = null) {
     try {
-        const user = await getOrCreateUser(tiktokId, nickname);
+        const user = await getOrCreateUser(uniqueId, userId, nickname, profilePictureUrl);
         
         return new Promise((resolve, reject) => {
             // Check if already in undesirables list
@@ -148,7 +161,7 @@ async function addToUndesirables(tiktokId, nickname, reason = '') {
                     db.run('DELETE FROM friends WHERE user_id = ?', [user.id]);
                     
                     // Add to undesirables
-                    db.run('INSERT INTO undesirables (user_id, reason) VALUES (?, ?)', [user.id, reason], function(err) {
+                    db.run('INSERT INTO undesirables (uniqueId, user_id, reason) VALUES (?, ?, ?)', [uniqueId, user.id, reason], function(err) {
                         if (err) {
                             reject(err);
                             return;
@@ -164,10 +177,10 @@ async function addToUndesirables(tiktokId, nickname, reason = '') {
 }
 
 // Remove user from friends list
-async function removeFromFriends(tiktokId) {
+async function removeFromFriends(uniqueId) {
     try {
         return new Promise((resolve, reject) => {
-            db.get('SELECT id FROM users WHERE tiktok_id = ?', [tiktokId], (err, user) => {
+            db.get('SELECT id FROM users WHERE uniqueId = ?', [uniqueId], (err, user) => {
                 if (err) {
                     reject(err);
                     return;
@@ -193,10 +206,10 @@ async function removeFromFriends(tiktokId) {
 }
 
 // Remove user from undesirables list
-async function removeFromUndesirables(tiktokId) {
+async function removeFromUndesirables(uniqueId) {
     try {
         return new Promise((resolve, reject) => {
-            db.get('SELECT id FROM users WHERE tiktok_id = ?', [tiktokId], (err, user) => {
+            db.get('SELECT id FROM users WHERE uniqueId = ?', [uniqueId], (err, user) => {
                 if (err) {
                     reject(err);
                     return;
@@ -222,14 +235,14 @@ async function removeFromUndesirables(tiktokId) {
 }
 
 // Check if user is in friends list
-async function isUserFriend(tiktokId) {
+async function isUserFriend(uniqueId) {
     try {
         return new Promise((resolve, reject) => {
             db.get(`
                 SELECT f.id FROM friends f
                 JOIN users u ON f.user_id = u.id
-                WHERE u.tiktok_id = ?
-            `, [tiktokId], (err, row) => {
+                WHERE u.uniqueId = ?
+            `, [uniqueId], (err, row) => {
                 if (err) {
                     reject(err);
                     return;
@@ -243,14 +256,14 @@ async function isUserFriend(tiktokId) {
 }
 
 // Check if user is in undesirables list
-async function isUserUndesirable(tiktokId) {
+async function isUserUndesirable(uniqueId) {
     try {
         return new Promise((resolve, reject) => {
             db.get(`
                 SELECT u.id, ud.reason FROM undesirables ud
                 JOIN users u ON ud.user_id = u.id
-                WHERE u.tiktok_id = ?
-            `, [tiktokId], (err, row) => {
+                WHERE u.uniqueId = ?
+            `, [uniqueId], (err, row) => {
                 if (err) {
                     reject(err);
                     return;
@@ -267,7 +280,7 @@ async function isUserUndesirable(tiktokId) {
 async function getAllFriends() {
     return new Promise((resolve, reject) => {
         db.all(`
-            SELECT u.id, u.tiktok_id, u.nickname, u.first_seen, u.last_seen, f.added_at
+            SELECT u.id, u.uniqueId, u.userId, u.nickname, u.profilePictureUrl, u.first_seen, u.last_seen, f.added_at
             FROM friends f
             JOIN users u ON f.user_id = u.id
             ORDER BY f.added_at DESC
@@ -285,7 +298,7 @@ async function getAllFriends() {
 async function getAllUndesirables() {
     return new Promise((resolve, reject) => {
         db.all(`
-            SELECT u.id, u.tiktok_id, u.nickname, u.first_seen, u.last_seen, ud.reason, ud.added_at
+            SELECT u.id, u.uniqueId, u.userId, u.nickname, u.profilePictureUrl, u.first_seen, u.last_seen, ud.reason, ud.added_at
             FROM undesirables ud
             JOIN users u ON ud.user_id = u.id
             ORDER BY ud.added_at DESC
@@ -303,17 +316,17 @@ async function getAllUndesirables() {
 async function searchUsers(query) {
     return new Promise((resolve, reject) => {
         db.all(`
-            SELECT u.id, u.tiktok_id, u.nickname, u.first_seen, u.last_seen,
+            SELECT u.id, u.uniqueId, u.userId, u.nickname, u.profilePictureUrl, u.first_seen, u.last_seen,
                 CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END as is_friend,
                 CASE WHEN ud.id IS NOT NULL THEN 1 ELSE 0 END as is_undesirable,
                 ud.reason
             FROM users u
             LEFT JOIN friends f ON u.id = f.user_id
             LEFT JOIN undesirables ud ON u.id = ud.user_id
-            WHERE u.tiktok_id LIKE ? OR u.nickname LIKE ?
+            WHERE u.uniqueId LIKE ? OR u.userId LIKE ? OR u.nickname LIKE ?
             ORDER BY u.last_seen DESC
             LIMIT 50
-        `, [`%${query}%`, `%${query}%`], (err, rows) => {
+        `, [`%${query}%`, `%${query}%`, `%${query}%`], (err, rows) => {
             if (err) {
                 reject(err);
                 return;

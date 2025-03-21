@@ -11,8 +11,11 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 const transformUserData = (item) => {
   return {
     id: item.id,
-    tiktokId: item.tiktok_id,
+    uniqueId: item.uniqueId || item.unique_id, // TikTok username (handle both camelCase and snake_case)
+    userId: item.userId || item.user_id, // TikTok numeric ID
+    tiktokId: item.uniqueId || item.unique_id, // Keep for backward compatibility
     nickname: item.nickname,
+    profilePictureUrl: item.profilePictureUrl || item.profile_picture_url,
     firstSeen: item.first_seen,
     lastSeen: item.last_seen,
     addedAt: item.added_at,
@@ -81,19 +84,23 @@ export const loadUserLists = async () => {
 
 /**
  * Add a user to the friends list and fetch the updated list
- * @param {string} tiktokId - The TikTok ID of the user
+ * @param {string} uniqueId - The TikTok username of the user
  * @param {string} nickname - The nickname of the user
+ * @param {string} profilePictureUrl - The profile picture URL of the user (optional)
  * @returns {Promise<Array>} - The updated friends list
  */
-export const addToFriendsList = async (tiktokId, nickname) => {
+export const addToFriendsList = async (user) => {
   try {
+    // For backward compatibility, also use uniqueId as userId if we don't have it
+    
+    
     // Add the friend
     const response = await fetch(`${API_BASE_URL}/users/friends`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ tiktokId, nickname }),
+      body: JSON.stringify({ uniqueId:user.uniqueId, userId:user.userId || user.uniqueId, nickname:user.nickname, profilePictureUrl:user.profilePictureUrl }),
     });
     
     if (!response.ok) {
@@ -117,13 +124,13 @@ export const addToFriendsList = async (tiktokId, nickname) => {
 
 /**
  * Remove a user from the friends list and fetch the updated list
- * @param {string} tiktokId - The TikTok ID of the user
+ * @param {string} uniqueId - The TikTok username of the user
  * @returns {Promise<Array>} - The updated friends list
  */
-export const removeFriend = async (tiktokId) => {
+export const removeFriend = async (uniqueId) => {
   try {
     // Remove the friend
-    const response = await fetch(`${API_BASE_URL}/users/friends/${tiktokId}`, {
+    const response = await fetch(`${API_BASE_URL}/users/friends/${uniqueId}`, {
       method: 'DELETE',
     });
     
@@ -148,20 +155,34 @@ export const removeFriend = async (tiktokId) => {
 
 /**
  * Add a user to the undesirables list and fetch the updated list
- * @param {string} tiktokId - The TikTok ID of the user
+ * @param {string} uniqueId - The TikTok username of the user
  * @param {string} nickname - The nickname of the user
  * @param {string} reason - The reason for adding to undesirables
+ * @param {string} profilePictureUrl - The profile picture URL of the user (optional)
  * @returns {Promise<Array>} - The updated undesirables list
  */
-export const addToUndesirablesList = async (tiktokId, nickname, reason = '') => {
+export const addToUndesirablesList = async (theUser, reason = '') => {
   try {
+    // For backward compatibility, also use uniqueId as userId if we don't have it
+    if(reason === ""){
+      // Don't show a prompt here - the component should display a modal to collect this
+      throw new Error("A reason is required for adding to undesirables list");
+    }
+
+    
     // Add the undesirable
     const response = await fetch(`${API_BASE_URL}/users/undesirables`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ tiktokId, nickname, reason }),
+      body: JSON.stringify({ 
+        uniqueId: theUser.uniqueId, 
+        userId: theUser.userId || theUser.uniqueId, 
+        nickname: theUser.nickname, 
+        reason, 
+        profilePictureUrl: theUser.profilePictureUrl 
+      }),
     });
     
     if (!response.ok) {
@@ -185,13 +206,13 @@ export const addToUndesirablesList = async (tiktokId, nickname, reason = '') => 
 
 /**
  * Remove a user from the undesirables list and fetch the updated list
- * @param {string} tiktokId - The TikTok ID of the user
+ * @param {string} uniqueId - The TikTok username of the user
  * @returns {Promise<Array>} - The updated undesirables list
  */
-export const removeUndesirable = async (tiktokId) => {
+export const removeUndesirable = async (uniqueId) => {
   try {
     // Remove the undesirable
-    const response = await fetch(`${API_BASE_URL}/users/undesirables/${tiktokId}`, {
+    const response = await fetch(`${API_BASE_URL}/users/undesirables/${uniqueId}`, {
       method: 'DELETE',
     });
     

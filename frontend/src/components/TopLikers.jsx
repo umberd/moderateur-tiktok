@@ -1,8 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import UserDataDisplay from './UserDataDisplay'
 
 const TopLikers = ({ likers }) => {
   // Sort likers by likeCount in descending order
   const sortedLikers = [...likers].sort((a, b) => b.likeCount - a.likeCount);
+  
+  // Track previous likers state to detect changes
+  const [prevLikers, setPrevLikers] = useState({});
+  const [flashingLikers, setFlashingLikers] = useState({});
+  
+  useEffect(() => {
+    // Create a map of current like counts by uniqueId
+    const currentLikerCounts = {};
+    sortedLikers.forEach(liker => {
+      currentLikerCounts[liker.uniqueId] = liker.likeCount;
+    });
+    
+    // Detect changes (but skip first render)
+    if (Object.keys(prevLikers).length > 0) {
+      const newFlashingLikers = {};
+      
+      // Check for likers whose count has changed
+      sortedLikers.forEach(liker => {
+        const currentCount = liker.likeCount;
+        const prevCount = prevLikers[liker.uniqueId];
+        
+        // If we have a previous count and it's different, trigger flash
+        if (prevCount !== undefined && prevCount !== currentCount) {
+          newFlashingLikers[liker.uniqueId] = true;
+        }
+      });
+      
+      // If we found changes, update the flashing state
+      if (Object.keys(newFlashingLikers).length > 0) {
+        // Set flashing state
+        setFlashingLikers(newFlashingLikers);
+        
+        // Clear flashing after animation completes
+        const timer = setTimeout(() => {
+          setFlashingLikers({});
+        }, 1000);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+    
+    // Always update the previous likers state after comparison
+    // This needs to happen outside the if block to capture the first render too
+    setPrevLikers(currentLikerCounts);
+  }, [sortedLikers, prevLikers]); // Include both dependencies
   
   return (
     <div className="rounded-2xl border border-gray-800 bg-gray-900/70 backdrop-blur-sm shadow-xl overflow-hidden">
@@ -17,6 +63,16 @@ const TopLikers = ({ likers }) => {
           {likers.length} fans
         </span>
       </div>
+      
+      <style jsx>{`
+        @keyframes flash {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.15); background-color: rgba(239, 68, 68, 0.5); }
+        }
+        .flashing {
+          animation: flash 0.8s ease-in-out;
+        }
+      `}</style>
       
       <div className="max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900" 
         style={{ 
@@ -34,7 +90,7 @@ const TopLikers = ({ likers }) => {
           </div>
         ) : (
           <div className="divide-y divide-gray-800">
-            {sortedLikers.slice(0, 10).map((liker, index) => (
+            {sortedLikers.map((liker, index) => (
               <div 
                 key={liker.uniqueId} 
                 className={`flex items-center justify-between px-4 py-3 transition-colors ${
@@ -46,8 +102,8 @@ const TopLikers = ({ likers }) => {
                 <div className="flex items-center">
                   <div className={`flex items-center justify-center w-7 h-7 rounded-full mr-3 text-xs font-bold ${
                     index < 3 ? 
-                      index === 0 ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' : 
-                      index === 1 ? 'bg-gray-300/20 text-gray-300 border border-gray-300/30' : 
+                      index%2 === 0 ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' : 
+                      index%2 === 1 ? 'bg-gray-300/20 text-gray-300 border border-gray-300/30' : 
                       'bg-amber-600/20 text-amber-400 border border-amber-600/30' : 
                       'bg-gray-700 text-gray-400 border border-gray-600/30'
                   }`}>
@@ -60,21 +116,15 @@ const TopLikers = ({ likers }) => {
                       liker.userStatus?.isUndesirable ? 'text-rose-400' : 
                       'text-white'
                     }`}>
-                      {liker.nickname}
+                      <UserDataDisplay message={liker} />
+                      {/* {liker.nickname} */}
                     </span>
                     
-                    {(liker.userStatus?.isFriend || liker.userStatus?.isUndesirable) && (
-                      <span className={`ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                        liker.userStatus?.isFriend ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 
-                        'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                      }`}>
-                        {liker.userStatus?.isFriend ? 'Friend' : 'Undesirable'}
-                      </span>
-                    )}
+                    
                   </div>
                 </div>
                 
-                <div className="flex items-center bg-red-500/20 px-2 py-1 rounded-full border border-red-500/30">
+                <div className={`flex items-center bg-red-500/20 px-2 py-1 rounded-full border border-red-500/30 ${flashingLikers[liker.uniqueId] ? 'flashing' : ''}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                   </svg>

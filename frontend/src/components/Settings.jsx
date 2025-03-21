@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 const Settings = ({ 
   darkTheme, setDarkTheme,
   showModeration, setShowModeration,
@@ -12,6 +14,12 @@ const Settings = ({
   availableOllamaModels,
 }) => {
   // Function to toggle dark theme and update localStorage
+  useEffect(() => {
+    if (availableOllamaModels.length > 0) {
+      setAiModel(availableOllamaModels[0].name);
+    }
+  }, [availableOllamaModels]);
+
   const toggleDarkTheme = (checked) => {
     setDarkTheme(checked);
     localStorage.setItem('darkTheme', checked);
@@ -22,6 +30,40 @@ const Settings = ({
     } else {
       document.documentElement.classList.remove('dark');
     }
+  };
+  
+  // Function to clear localStorage and reset all settings to defaults
+  const clearLocalStorage = () => {
+    // Clear all localStorage items
+    localStorage.removeItem('darkTheme');
+    localStorage.removeItem('showModeration');
+    localStorage.removeItem('showAIResponses');
+    localStorage.removeItem('enableSoundNotifications');
+    localStorage.removeItem('enableFlvStream');
+    localStorage.removeItem('enableMentionNotifications');
+    localStorage.removeItem('tiktokUsername');
+    localStorage.removeItem('aiProvider');
+    localStorage.removeItem('aiModel');
+    localStorage.removeItem('openaiApiKey');
+    localStorage.removeItem('username');
+    localStorage.removeItem('sessionId');
+    
+    // Reset all state variables to defaults
+    setDarkTheme(false);
+    setShowModeration(true);
+    setShowAIResponses(true);
+    setEnableSoundNotifications(false);
+    setEnableFlvStream(true);
+    setEnableMentionNotifications(true);
+    setYourUsername('');
+    setAiProvider('openai');
+    if (availableOllamaModels.length > 0) {
+      setAiModel(availableOllamaModels[0].name);
+    }
+    setOpenaiApiKey('');
+    
+    // Remove dark class from document
+    document.documentElement.classList.remove('dark');
   };
   
   return (
@@ -318,6 +360,22 @@ const Settings = ({
             </div>
           )}
         </div>
+      </div>
+      
+      {/* Reset Settings Button */}
+      <div className="mt-8 pt-6 border-t border-gray-800">
+        <div className="flex justify-center">
+          <button
+            onClick={clearLocalStorage}
+            className="px-5 py-2.5 bg-red-500/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 font-medium rounded-lg transition-all duration-200 flex items-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            Reset All Settings
+          </button>
+        </div>
+        <p className="text-xs text-gray-500 text-center mt-2">This will clear all saved settings and reset to defaults</p>
       </div>
     </div>
   )
