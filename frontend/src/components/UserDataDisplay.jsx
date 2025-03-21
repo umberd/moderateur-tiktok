@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 
 // Add custom animation for the glow effect
 const glowStyles = `
@@ -23,7 +24,7 @@ const glowStyles = `
   }
 `;
 
-const UserDetailedDisplay = ({ message }) => {
+const UserDetailedDisplay = ({ message, position }) => {
 
   //message.followInfo example
   //followInfo: {followingCount: 1401, followerCount: 409, followStatus: 0, pushStatus: 0}
@@ -43,7 +44,13 @@ const UserDetailedDisplay = ({ message }) => {
   const { followerCount, followingCount } = message.followInfo || { followerCount: 0, followingCount: 0 };
   
   return (
-    <div className="absolute z-100 bg-gray-800 rounded-lg shadow-xl p-4 w-64 text-white border border-gray-700 transition-opacity duration-200">
+    <div 
+      className="absolute z-50 bg-gray-800 rounded-lg shadow-xl p-4 w-64 text-white border border-gray-700 transition-opacity duration-200"
+      style={{
+        left: position?.x || 0,
+        top: position?.y || 0
+      }}
+    >
       <div className="flex items-center mb-3">
         <div className={`${
             message.userStatus.isFriend 
@@ -113,18 +120,42 @@ const UserDetailedDisplay = ({ message }) => {
 
 const UserDataDisplay = ({ message, size = 'normal', showNickname = true }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [portalPosition, setPortalPosition] = useState({ x: 0, y: 0 });
+  const [portalRoot, setPortalRoot] = useState(null);
   
-  // Add the styles for glow effect
-  React.useEffect(() => {
+  // Create portal root when component mounts
+  useEffect(() => {
+    // Add the styles for glow effect
     const styleTag = document.createElement('style');
     styleTag.innerHTML = glowStyles;
     document.head.appendChild(styleTag);
+    
+    // Create portal container
+    const portalContainer = document.getElementById('portal-root');
+    if (!portalContainer) {
+      const div = document.createElement('div');
+      div.id = 'portal-root';
+      document.body.appendChild(div);
+      setPortalRoot(div);
+    } else {
+      setPortalRoot(portalContainer);
+    }
     
     return () => {
       document.head.removeChild(styleTag);
     };
   }, []);
   
+  // Handle mouse enter to calculate position and show details
+  const handleMouseEnter = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setPortalPosition({ 
+      x: rect.left, 
+      y: rect.bottom + window.scrollY 
+    });
+    setShowDetails(true);
+  };
+
   // Determine username styles based on user status
   const getUsernameStyles = () => {
     if (message?.userStatus?.isFriend) {
@@ -167,7 +198,7 @@ const UserDataDisplay = ({ message, size = 'normal', showNickname = true }) => {
         className={`relative ${size !== 'small' ? getAvatarStatusClass() : ''} rounded-full ${
           size === 'small' ? 'w-5 h-5' : 'w-8 h-8'
         } flex items-center justify-center mr-2`}
-        onMouseEnter={() => setShowDetails(true)}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setShowDetails(false)}
       >
         <img
@@ -178,11 +209,6 @@ const UserDataDisplay = ({ message, size = 'normal', showNickname = true }) => {
             e.target.src = getFallbackImage();
           }}
         />
-        {showDetails && (
-          <div className="absolute left-0 top-full mt-2">
-            <UserDetailedDisplay message={message} />
-          </div>
-        )}
       </div>
       {showNickname && (
         <>
@@ -203,6 +229,11 @@ const UserDataDisplay = ({ message, size = 'normal', showNickname = true }) => {
           )}
         </span>
         </>
+      )}
+      
+      {showDetails && portalRoot && ReactDOM.createPortal(
+        <UserDetailedDisplay message={message} position={portalPosition} />,
+        portalRoot
       )}
     </div>
   );
