@@ -292,6 +292,7 @@ Please respond in XML format using these tags and only these tags:
 
 const systemPrompt = `
 Vous êtes un assistant qui réponds au chat en direct TikTok.
+Vous repondez uniquement en Markdown.
 Vous recevrez des commentaires du chat provenant du canal en direct. Pour chaque nouvelle mise à jour du chat, vous repondrez.
 Pour le nom d'utilisateur, assurez-vous de le dire d'une façon facile à prononcer.
 Pour les smileys ou les emojis, prononce les simplement. un seul par message, sinon, c'est trop long.
@@ -310,7 +311,12 @@ utilise l'outil get_chat_messages pour avoir les messages du chat pour répondre
 Tu peux donner la liste exacte des utilisateurs présents dans le chat.
 Tu peux répéter et analyser les messages du chat pour donner des statistiques, des explications...
 Fais des réponses concises et courtes.
-Ne cites jamais les sources de 
+Tu peux chercher des images sur internet pour illustrer tes réponses.
+tu peux tout chercher sur internet.
+Ne cites jamais les sources.
+Pour le LaTeX, utilise le format suivant : $E=mc^2$ for inline or $$\frac{d}{dx}e^x = e^x$$ for block.
+Réponds en Markdownd.
+Répond en MD.
 `;
 
 // Function to generate a suggested response using Ollama
@@ -668,7 +674,7 @@ io.on('connection', (socket) => {
             // Generate a suggested response using the selected provider and model
             try {
                 //console.log(msg);
-                if (socket.showResponses && msg.comment.startsWith("Bot")) {
+                if (socket.showResponses && (msg.comment.startsWith("bot") ||msg.comment.startsWith("Bot") || msg.comment.startsWith("Robot")|| msg.comment.startsWith("robot"))) {
                     //console.log('Generating response');
                     let theMessage=msg.nickname + ' à dit : "' + msg.comment + '"';
                     // if msg comment start with @[username] make nickname à écrit à [username] : comment
