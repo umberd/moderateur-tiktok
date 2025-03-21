@@ -452,7 +452,7 @@ async function generateResponseWithOpenAI(text, apiKey = null) {
         }
         
         if(!hasFunctionCall){
-            return response;
+            return response.output_text;
         }else{
             const response = await openaiClient.responses.create({
                 model: "gpt-4o",
@@ -460,7 +460,7 @@ async function generateResponseWithOpenAI(text, apiKey = null) {
                 instructions: systemPrompt,
                 max_output_tokens: 100,
             });
-            return response;
+            return response.output_text;
         }
     } catch (error) {
         console.error('Error generating response with OpenAI:', error);
